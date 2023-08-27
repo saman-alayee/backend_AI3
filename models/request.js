@@ -40,7 +40,8 @@ const Request = mongoose.model(
       minlength: 3,
       maxlength: 255,
     },
-  })
+  },
+  {timestamps:true})
 );
 function validateRequest(request) {
   const schema = Joi.object({

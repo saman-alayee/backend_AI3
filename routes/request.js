@@ -23,40 +23,90 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
+  // Create a new Request instance
+  let request = new Request({
+    // Set properties based on the request body
+    // (Assuming your request schema has properties like firstName, lastName, phone, email, etc.)
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    phone: req.body.phone,
+    email: req.body.email,
+    service:req.body.service,
+    company:req.body.company
+    // ... other properties
+  });
+
+  // Save the new request to the database
+  request = await request.save();
+
+  // Send the newly created request as the response
+  res.send(request);
+});
+// ... (previous imports and code)
+
+router.put("/:id", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
   try {
-    const request = new Request({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      phone: req.body.phone,
-      email: req.body.email,
-      company: req.body.company,
-      service: req.body.service,
-    });
+    // Find the request by ID and update its properties
+    const request = await Request.findByIdAndUpdate(
+      req.params.id,
+      {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        phone: req.body.phone,
+        email: req.body.email,
+        service: req.body.service,
+        company: req.body.company,
+        // ... other properties to update
+      },
+      { new: true } // Return the updated document
+    );
 
-    // Save the request to the database
-    await request.save();
+    if (!request) {
+      return res.status(404).send("Request with the given ID was not found.");
+    }
 
-    // Send an email
-    const mailOptions = {
-      from: 'saman.alaii10@gmail.com', // Replace with your Gmail email
-      to: 'saman.alaii8@gmail.com', // Replace with the actual recipient email
-      subject: 'Form Submission',
-      text: `
-        Name: ${req.body.firstName} ${req.body.lastName}
-        Email: ${req.body.email}
-        Phone: ${req.body.phone}
-        Company: ${req.body.company}
-        Service: ${req.body.service}
-      `,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.response);
-    res.sendStatus(200); // Successful form submission
+    res.send(request);
   } catch (error) {
-    console.error('Error sending email:', error);
-    res.sendStatus(500); // Internal server error
+    return res.status(500).send("An error occurred while updating the request.");
   }
 });
+
+router.delete("/:id", async (req, res) => {
+  try {
+    // Find the request by ID and delete it
+    const request = await Request.findByIdAndRemove(req.params.id);
+
+    if (!request) {
+      return res.status(404).send("Request with the given ID was not found.");
+    }
+
+    res.send(request);
+  } catch (error) {
+    return res.status(500).send("An error occurred while deleting the request.");
+  }
+});
+
+// ... (previous imports and code)
+
+router.get("/:id", async (req, res) => {
+  try {
+    // Find the request by ID
+    const request = await Request.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).send("Request with the given ID was not found.");
+    }
+
+    res.send(request);
+  } catch (error) {
+    return res.status(500).send("An error occurred while fetching the request.");
+  }
+});
+
+// ... (remaining code and module.exports)
+
 
 module.exports = router;
