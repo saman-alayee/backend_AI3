@@ -107,6 +107,27 @@ router.get("/:id", async (req, res) => {
 });
 
 // ... (remaining code and module.exports)
+// ... (previous imports and code)
+
+// Delete all requests
+router.delete("/", async (req, res) => {
+  try {
+    // Delete all requests
+    const result = await Request.deleteMany();
+
+    if (result.deletedCount === 0) {
+      return res.status(404).send("No requests found to delete.");
+    }
+
+    res.send(`Deleted ${result.deletedCount} requests.`);
+  } catch (error) {
+    return res.status(500).send("An error occurred while deleting requests.");
+  }
+});
+
+// ... (previous imports and code)
+
+module.exports = router;
 
 
 module.exports = router;
