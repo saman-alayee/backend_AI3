@@ -7,50 +7,57 @@ const Request = mongoose.model(
     firstName: {
       type: String,
       required: true,
-      minlength: 5,
-      maxlength: 255,
+      maxlength: 20,
     },
     lastName: {
       type: String,
       required: true,
-      minlength: 5,
-      maxlength: 255,
+      maxlength: 50,
     },
     phone: {
       type: String,
       required: true,
-      minlength: 6,
-      maxlength: 20,
+      maxlength: 12,
     },
     email: {
       type: String,
       required: true,
-      minlength: 5,
-      maxlength: 255,
+      maxlength: 100,
     },
     company: {
       type: String,
       required: true,
-      minlength: 5,
-      maxlength: 255,
+      maxlength: 50,
     },
     service: {
       type: String,
       required: true,
-      minlength: 3,
       maxlength: 255,
     },
-  },
-  {timestamps:true})
+    domain: {
+      type: String,
+      required: true,
+      maxlength: 100,
+    },
+    description: {
+      type: String,
+      maxlength: 200,
+    },
+    
+  },{timestamps:true},
+  )
 );
+
 function validateRequest(request) {
   const schema = Joi.object({
-    firstName: Joi.string().min(5).max(50).required(),
-    lastName: Joi.string().min(5).max(50).required(),
-    phone: Joi.string().min(6).max(20).required(),
-    email: Joi.string().email().min(5).max(255).required(),
-    company: Joi.string().min(5).max(255).required(),
-    service: Joi.string().min(3).max(255).required(),
+    firstName: Joi.string().max(20).required(),
+    lastName: Joi.string().max(50).required(),
+    phone: Joi.string().max(12).required(),
+    email: Joi.string().email().max(100).required(),
+    company: Joi.string().max(50).required(),
+    service: Joi.string().max(255).required(),
+    domain: Joi.string().max(100).required(),
+    description: Joi.string().max(200),
   });
   const result = schema.validate(request);
   return result;

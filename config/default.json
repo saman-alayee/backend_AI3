@@ -1,5 +1,6 @@
 {
-    "mongo_URI":"mongodb+srv://DB:4WNNfkN7fS4kgLpG@cluster0.aeeb0b6.mongodb.net/"
+    "mongo_URI":"mongodb+srv://DB:4WNNfkN7fS4kgLpG@cluster0.aeeb0b6.mongodb.net/",
+    "jwtPrivateKey": "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
     
 
 
