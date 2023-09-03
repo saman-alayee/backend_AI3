@@ -142,7 +142,7 @@ router.get("/exportToExcel", auth, async (req, res) => {
     });
 
     // Generate a file path for the Excel file
-    const exportPath = path.join(__dirname, "Requests.xlsx"); // Change this path as needed
+    const exportPath = path.join(__dirname, "../exports/Requests.xlsx"); // Change this path as needed
 
     // Save the Excel file
     await workbook.xlsx.writeFile(exportPath);
@@ -155,7 +155,7 @@ router.get("/exportToExcel", auth, async (req, res) => {
 });
 
 router.get("/downloadExcel", auth, (req, res) => {
-  const filePath = path.join(__dirname, "Requests.xlsx"); // Change this path as needed
+  const filePath = path.join(__dirname, "../exports/Requests.xlsx"); // Change this path as needed
 
   res.download(filePath, "Requests.xlsx", (err) => {
     if (err) {

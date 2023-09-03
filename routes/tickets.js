@@ -4,6 +4,7 @@ const { Ticket, validate, upload } = require("../models/ticket"); // Update the 
 const auth = require("../middleware/auth")
 const path = require("path");
 const ExcelJS = require("exceljs");
+const fs = require("fs");
 
 // Define your route for handling the ticket creation with image upload
 router.post("/", upload.single("image"), async (req, res) => {
@@ -60,30 +61,22 @@ router.get("/", async (req, res) => {
 });
 router.delete("/:id", auth, async (req, res) => {
   try {
-    // Find the request by ID and delete it
-    const ticket = await Ticket.findByIdAndRemove(req.params.id);
+    // Find the request by ID
+    const ticket = await Ticket.findById(req.params.id);
 
     if (!ticket) {
       return res.status(404).send("Ticket with the given ID was not found.");
     }
 
-    // Delete the attachment file from your system
-    const attachmentFilePath = path.join(__dirname, "..", "uploads", ticket.attachmentFile);
+    // Remove the attachment file from the project folder
+    if (ticket.attachmentFile) {
+      const filePath = path.join(__dirname, "../uploads", path.basename(ticket.attachmentFile));
+      console.log(filePath)
+      fs.unlinkSync(filePath); // when delete a ticket here i delete attachment file from uploads folder
+    }
 
-    // Check if the file exists before attempting to delete
-    fs.stat(attachmentFilePath, (err, stats) => {
-      if (!err && stats.isFile()) {
-        fs.unlink(attachmentFilePath, (unlinkError) => {
-          if (unlinkError) {
-            console.error("Error deleting attachment file:", unlinkError);
-          } else {
-            console.log("Attachment file deleted successfully.");
-          }
-        });
-      } else {
-        console.error("Error checking attachment file:", err);
-      }
-    });
+    // Delete the ticket
+    await Ticket.findByIdAndRemove(req.params.id);
 
     res.send(ticket);
   } catch (error) {
@@ -140,7 +133,7 @@ router.get("/exportToExcel", auth, async (req, res) => {
     });
 
     // Generate a file path for the Excel file
-    const exportPath = path.join(__dirname, "../tickets.xlsx"); // Change this path as needed
+    const exportPath = path.join(__dirname, "../exports/tickets.xlsx"); // Change this path as needed
 
     // Save the Excel file
     await workbook.xlsx.writeFile(exportPath);
@@ -153,7 +146,7 @@ router.get("/exportToExcel", auth, async (req, res) => {
 });
 
 router.get("/downloadExcel", auth, (req, res) => {
-  const filePath = path.join(__dirname, "../tickets.xlsx"); // Change this path as needed
+  const filePath = path.join(__dirname, "../exports/tickets.xlsx"); // Change this path as needed
 
   res.download(filePath, "Tickets.xlsx", (err) => {
     if (err) {
