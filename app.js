@@ -23,11 +23,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Define your base URL (e.g., localhost:5000)
+const baseUrl = 'http://localhost:5000';
 
 app.use((req, res, next) => {
   const clientIP = req.ip; // This will give you the IP address of the client
   console.log(`Request from IP: ${clientIP}`);
+  next();
+});
+
+// Middleware to prepend base URL to image paths
+app.use((req, res, next) => {
+  res.locals.baseUrl = baseUrl;
   next();
 });
 
@@ -47,5 +56,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
- 
 module.exports = app;
