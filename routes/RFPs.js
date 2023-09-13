@@ -147,36 +147,109 @@ router.get("/exportToExcel", auth, async (req, res) => {
     // Define headers for the Excel file
     const headers = [
       "Index",
-      "First Name",
-      "Last Name",
-      "Phone",
-      "Email",
-      "Company",
-      "Service",
-      "Domain",
-      "Description",
+      "Field 1",
+      "Field 2",
+      "Field 3",
+      "Field 4",
+      "Field 5",
+      "Field 6",
+      "Field 7",
+      "Field 8",
+      "Field 9",
+      "Field 10",
+      "Field 11",
+      "Field 12",
+      "Field 13",
+      "Field 14",
+      "Field 15",
+      "Field 16",
+      "Field 17",
+      "Field 18",
+      "Field 19",
+      "Field 20",
+      "Field 21",
+      "Field 22",
+      "Field 23",
+      "Field 24",
+      "Field 25",
+      "Field 26",
+      "Field 27",
+      "Field 28",
+      "Field 29",
+      "Field 30",
+      "Field 31",
+      "Field 32",
+      "Field 33",
+      "Field 34",
+      "Field 35",
+      "Field 36",
+      "Field 37",
+      "Field 38",
+      "Field 39",
+      "Field 40",
+      "Field 41",
+      "Field 42",
+      "Field 43",
+      "Field 44",
       "Created At",
     ];
+    
     worksheet.addRow(headers);
 
     // Add data rows to the worksheet
-    requests.forEach((req, index) => {
+    rfps.forEach((rfp, index) => {
       worksheet.addRow([
         index + 1,
-        req.firstName,
-        req.lastName,
-        req.phone,
-        req.email,
-        req.company,
-        req.service,
-        req.domain,
-        req.description,
-        req.createdAt.toISOString(), // Convert createdAt date to ISO format
+        rfp.field_1,
+        rfp.field_2,
+        rfp.field_3,
+        rfp.field_4,
+        rfp.field_5,
+        rfp.field_6,
+        rfp.field_7,
+        rfp.field_8,
+        rfp.field_9,
+        rfp.field_10,
+        rfp.field_11,
+        rfp.field_12,
+        rfp.field_13,
+        rfp.field_14,
+        rfp.field_15,
+        rfp.field_16,
+        rfp.field_17,
+        rfp.field_18,
+        rfp.field_19,
+        rfp.field_20,
+        rfp.field_21,
+        rfp.field_22,
+        rfp.field_23,
+        rfp.field_24,
+        rfp.field_25,
+        rfp.field_26,
+        rfp.field_27,
+        rfp.field_28,
+        rfp.field_29,
+        rfp.field_30,
+        rfp.field_31,
+        rfp.field_32,
+        rfp.field_33,
+        rfp.field_34,
+        rfp.field_35,
+        rfp.field_36,
+        rfp.field_37,
+        rfp.field_38,
+        rfp.field_39,
+        rfp.field_40,
+        rfp.field_41,
+        rfp.field_42,
+        rfp.field_43,
+        rfp.field_44,
+        rfp.createdAt.toISOString(), // Convert createdAt date to ISO format
       ]);
     });
-
+    
     // Generate a file path for the Excel file
-    const exportPath = path.join(__dirname, "../exports/Requests.xlsx"); // Change this path as needed
+    const exportPath = path.join(__dirname, "../exports/Rfp.xlsx"); // Change this path as needed
 
     // Save the Excel file
     await workbook.xlsx.writeFile(exportPath);
@@ -189,9 +262,9 @@ router.get("/exportToExcel", auth, async (req, res) => {
 });
 
 router.get("/downloadExcel", auth, (req, res) => {
-  const filePath = path.join(__dirname, "../exports/Requests.xlsx"); // Change this path as needed
+  const filePath = path.join(__dirname, "../exports/Rfp.xlsx"); // Change this path as needed
 
-  res.download(filePath, "Requests.xlsx", (err) => {
+  res.download(filePath, "Rfp.xlsx", (err) => {
     if (err) {
       console.error("Error downloading Excel file:", err);
       res
