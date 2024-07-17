@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
-const multer = require("multer"); // Add Multer
+const multer = require("multer"); 
 
 // Define storage for image uploads using Multer
 const storage = multer.diskStorage({
