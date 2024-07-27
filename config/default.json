@@ -1,5 +1,5 @@
 {
-    "mongo_URI":"mongodb+srv://DB:4WNNfkN7fS4kgLpG@cluster0.aeeb0b6.mongodb.net/",
+    "mongo_URI": "mongodb://127.0.0.1:27017/requests",
     "jwtPrivateKey": "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
     "baseUrl" : "http://localhost:5000"
 

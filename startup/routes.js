@@ -6,7 +6,6 @@ var demoAuthAdmin = require("../routes/authAdmin");
 var demoUser = require("../routes/user");
 var demoAdmin = require("../routes/admin");
 var demoTicket = require("../routes/tickets");
-var demoRFPs = require("../routes/RFPs");
 
 
 module.exports = function (app) {
@@ -18,6 +17,5 @@ module.exports = function (app) {
   app.use("/api/users", demoUser);
   app.use("/api/admin", demoAdmin);
   app.use("/api/ticket", demoTicket);
-  app.use("/api/rfp",demoRFPs)
 
 };

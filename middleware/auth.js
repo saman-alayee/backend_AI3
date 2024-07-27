@@ -7,7 +7,7 @@ function auth(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
-    console.log(config.get("jwtPrivateKey"));
+    console.log(config.get(req));
     req.userId = decoded._id;
     next();
   } catch (ex) {

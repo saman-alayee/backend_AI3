@@ -20,7 +20,7 @@ const adminSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 adminSchema.methods.generateAuthToken = function () {
-  const token = jwt.sign({ _id: this._id, role: 'admin' }, config.get('jwtPrivateKey'), { expiresIn: '1h' });
+  const token = jwt.sign({ _id: this._id, role: 'admin' }, config.get('jwtPrivateKey'), { expiresIn: '12h' });
   return token;
 };
 

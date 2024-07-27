@@ -1,28 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const { Ticket, validate, upload } = require("../models/ticket"); // Update the path
-const auth = require("../middleware/auth")
+const auth = require("../middleware/auth");
+const adminAuth = require("../middleware/adminAuth");
 const path = require("path");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
 
-// Define your route for handling the ticket creation with image upload
-router.post("/", upload.single("image"), async (req, res) => {
-  // Handle the image file here and save its URL in the MongoDB document
+router.post("/",auth, upload.single("image"), async (req, res) => {
   const uploadedFile = req.file;
 
-  // Check if an image was uploaded
   if (!uploadedFile) {
     return res.status(400).send("Please upload an image.");
   }
 
-  // Construct the image URL based on your server's configuration
-  const attachmentFileUrl = `${req.protocol}://${req.get("host")}/uploads/${uploadedFile.filename}`;
-
-  // Generate a unique 5-digit ticket number
+  const attachmentFileUrl = `${req.protocol}://${req.get("host")}/uploads/${
+    uploadedFile.filename
+  }`;
 
   const ticketData = {
-    // Populate other ticket fields based on your form data
     fullName: req.body.fullName,
     email: req.body.email,
     company: req.body.company,
@@ -34,13 +30,11 @@ router.post("/", upload.single("image"), async (req, res) => {
     attachmentFile: attachmentFileUrl, // Save the image URL in the document
   };
 
-  // Validate the ticket data
   const validationResult = validate(ticketData);
   if (validationResult.error) {
     return res.status(400).send(validationResult.error.details[0].message);
   }
 
-  // Create a new ticket with the validated data
   const ticket = new Ticket(ticketData);
 
   try {
@@ -51,7 +45,7 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", adminAuth, async (req, res) => {
   try {
     const tickets = await Ticket.find();
     res.status(200).send(tickets);
@@ -59,7 +53,7 @@ router.get("/", async (req, res) => {
     res.status(500).send("An error occurred while fetching tickets.");
   }
 });
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", adminAuth, async (req, res) => {
   try {
     // Find the request by ID
     const ticket = await Ticket.findById(req.params.id);
@@ -70,8 +64,12 @@ router.delete("/:id", auth, async (req, res) => {
 
     // Remove the attachment file from the project folder
     if (ticket.attachmentFile) {
-      const filePath = path.join(__dirname, "../uploads", path.basename(ticket.attachmentFile));
-      console.log(filePath)
+      const filePath = path.join(
+        __dirname,
+        "../uploads",
+        path.basename(ticket.attachmentFile)
+      );
+      console.log(filePath);
       fs.unlinkSync(filePath); // when delete a ticket here i delete attachment file from uploads folder
     }
 
@@ -80,14 +78,11 @@ router.delete("/:id", auth, async (req, res) => {
 
     res.send(ticket);
   } catch (error) {
-    return res
-      .status(500)
-      .send("An error occurred while deleting the ticket.");
+    return res.status(500).send("An error occurred while deleting the ticket.");
   }
 });
 
-
-router.get("/exportToExcel", auth, async (req, res) => {
+router.get("/exportToExcel", adminAuth, async (req, res) => {
   try {
     // Fetch all requests from the database
     const tickets = await Ticket.find();
@@ -97,7 +92,6 @@ router.get("/exportToExcel", auth, async (req, res) => {
     const worksheet = workbook.addWorksheet("Tickets");
 
     // Define headers for the Excel file
-    
 
     const headers = [
       "Index",
@@ -145,7 +139,7 @@ router.get("/exportToExcel", auth, async (req, res) => {
   }
 });
 
-router.get("/downloadExcel", auth, (req, res) => {
+router.get("/downloadExcel", adminAuth, (req, res) => {
   const filePath = path.join(__dirname, "../exports/tickets.xlsx"); // Change this path as needed
 
   res.download(filePath, "Tickets.xlsx", (err) => {

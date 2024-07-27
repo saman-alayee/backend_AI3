@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
-const multer = require("multer"); 
+const multer = require("multer");
+const jalaali = require('jalaali-js');
 
 // Define storage for image uploads using Multer
 const storage = multer.diskStorage({
@@ -11,12 +12,13 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + "-" + file.originalname); // Generate a unique filename for each uploaded file
   },
 });
+
 function generateTicketNumber() {
-  // const prefix = "TICKET"; // You can change this prefix as needed
   const randomNumber = Math.floor(Math.random() * 10000000); // Generate a random number
   const ticketNumber = `${randomNumber}`; // Combine the prefix and random number
   return ticketNumber;
 }
+
 const upload = multer({ storage: storage });
 
 const Ticket = mongoose.model(
@@ -68,17 +70,22 @@ const Ticket = mongoose.model(
         required: true,
         maxlength: 255,
       },
-      // Add a field to store the image file path
       attachmentFile: {
         type: String,
         required: true,
         maxlength: 255,
       },
-     
     },
     { timestamps: true }
   )
 );
+
+Ticket.schema.pre('save', function (next) {
+  const errorTime = new Date(this.errorTime);
+  const jalaaliDate = jalaali.toJalaali(errorTime.getFullYear(), errorTime.getMonth() + 1, errorTime.getDate());
+  this.errorTime = `${jalaaliDate.jy}-${jalaaliDate.jm.toString().padStart(2, '0')}-${jalaaliDate.jd.toString().padStart(2, '0')}`;
+  next();
+});
 
 function validateTicket(ticket) {
   const schema = Joi.object({
@@ -97,7 +104,6 @@ function validateTicket(ticket) {
   return result;
 }
 
-
 exports.Ticket = Ticket;
 exports.validate = validateTicket;
-exports.upload = upload; // Export the Multer uploazd middleware
+exports.upload = upload; // Export the Multer upload middleware
