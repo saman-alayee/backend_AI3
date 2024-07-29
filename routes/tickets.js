@@ -7,7 +7,7 @@ const path = require("path");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
 
-router.post("/",auth, upload.single("image"), async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
   const uploadedFile = req.file;
 
   if (!uploadedFile) {
