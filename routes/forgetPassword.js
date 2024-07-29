@@ -23,6 +23,61 @@ const validateEmail = (data) => {
   return schema.validate(data);
 };
 
+/**
+ * @swagger
+ * /forgetPassword:
+ *   post:
+ *     summary: Send password reset email
+ *     tags: [Password Reset]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: User's email address
+ *                 example: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: Email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 messageId:
+ *                   type: string
+ *                 response:
+ *                   type: string
+ *       400:
+ *         description: Invalid email or user not found
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               examples:
+ *                 userNotFound:
+ *                   summary: User not found
+ *                   value: "User not found"
+ *                 invalidEmail:
+ *                   summary: Invalid email format
+ *                   value: "Invalid email format"
+ *       500:
+ *         description: Error sending email
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               example: "Error sending email: <error_message>"
+ */
+
 router.post("/", async (req, res) => {
   const { error } = validateEmail(req.body);
   if (error) return res.status(400).send(error.details[0].message);

@@ -1,12 +1,70 @@
 const express = require("express");
 const router = express.Router();
-const { Ticket, validate, upload } = require("../models/ticket"); // Update the path
+const { Ticket, validate, upload } = require("../models/ticket");
 const auth = require("../middleware/auth");
 const adminAuth = require("../middleware/adminAuth");
 const path = require("path");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
 
+/**
+ * @swagger
+ * tags:
+ *   name: Tickets
+ *   description: Ticket management endpoints
+ */
+
+/**
+ * @swagger
+ * /tickets:
+ *   post:
+ *     summary: Create a new ticket
+ *     tags: [Tickets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 description: Full name of the user
+ *               email:
+ *                 type: string
+ *                 description: Email of the user
+ *               company:
+ *                 type: string
+ *                 description: Company name
+ *               licenseCode:
+ *                 type: string
+ *                 description: License code
+ *               problemType:
+ *                 type: string
+ *                 description: Type of problem
+ *               errorTime:
+ *                 type: string
+ *                 description: Error time
+ *               request:
+ *                 type: string
+ *                 description: Request description
+ *               requestTitle:
+ *                 type: string
+ *                 description: Request title
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file
+ *     responses:
+ *       201:
+ *         description: Ticket created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Ticket'
+ *       400:
+ *         description: Invalid input
+ */
 router.post("/", upload.single("image"), async (req, res) => {
   const uploadedFile = req.file;
 
@@ -45,14 +103,93 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /tickets:
+ *   get:
+ *     summary: Get a list of tickets with pagination
+ *     tags: [Tickets]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: A list of tickets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 totalTickets:
+ *                   type: integer
+ *                 tickets:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Ticket'
+ *       500:
+ *         description: An error occurred while fetching tickets
+ */
 router.get("/", adminAuth, async (req, res) => {
   try {
-    const tickets = await Ticket.find();
-    res.status(200).send(tickets);
+    // Parse query parameters
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not provided
+    const skip = (page - 1) * limit;
+
+    // Fetch paginated tickets
+    const tickets = await Ticket.find().skip(skip).limit(limit);
+
+    // Get total number of tickets
+    const totalTickets = await Ticket.countDocuments();
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalTickets / limit);
+
+    // Send response with pagination metadata and tickets
+    res.status(200).json({
+      page,
+      totalPages,
+      totalTickets,
+      tickets
+    });
   } catch (error) {
     res.status(500).send("An error occurred while fetching tickets.");
   }
 });
+
+/**
+ * @swagger
+ * /tickets/{id}:
+ *   delete:
+ *     summary: Delete a ticket by ID
+ *     tags: [Tickets]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Ticket ID
+ *     responses:
+ *       200:
+ *         description: Ticket deleted successfully
+ *       404:
+ *         description: Ticket not found
+ *       500:
+ *         description: An error occurred while deleting the ticket
+ */
 router.delete("/:id", adminAuth, async (req, res) => {
   try {
     // Find the request by ID
@@ -82,6 +219,18 @@ router.delete("/:id", adminAuth, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /tickets/exportToExcel:
+ *   get:
+ *     summary: Export tickets to Excel
+ *     tags: [Tickets]
+ *     responses:
+ *       200:
+ *         description: Excel file generated and sent
+ *       500:
+ *         description: An error occurred while exporting to Excel
+ */
 router.get("/exportToExcel", adminAuth, async (req, res) => {
   try {
     // Fetch all requests from the database
@@ -92,7 +241,6 @@ router.get("/exportToExcel", adminAuth, async (req, res) => {
     const worksheet = workbook.addWorksheet("Tickets");
 
     // Define headers for the Excel file
-
     const headers = [
       "Index",
       "Full name",
@@ -139,6 +287,18 @@ router.get("/exportToExcel", adminAuth, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /tickets/downloadExcel:
+ *   get:
+ *     summary: Download the exported Excel file
+ *     tags: [Tickets]
+ *     responses:
+ *       200:
+ *         description: Excel file downloaded
+ *       500:
+ *         description: An error occurred while downloading the Excel file
+ */
 router.get("/downloadExcel", adminAuth, (req, res) => {
   const filePath = path.join(__dirname, "../exports/tickets.xlsx"); // Change this path as needed
 
@@ -151,4 +311,5 @@ router.get("/downloadExcel", adminAuth, (req, res) => {
     }
   });
 });
+
 module.exports = router;

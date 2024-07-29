@@ -5,11 +5,77 @@ const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const auth = require('../middleware/auth');
 
+/**
+ * @swagger
+ * /admin/verify:
+ *   get:
+ *     summary: Verify admin
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Returns the authenticated admin without password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal Server Error
+ */
 router.get('/verify', auth, async (req, res) => {
   const admin = await Admin.findById(req.user._id).select('-password');
   res.send(admin);
 });
 
+/**
+ * @swagger
+ * /admin:
+ *   post:
+ *     summary: Register a new admin
+ *     tags: [Admin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Admin registered successfully
+ *         headers:
+ *           x-auth-token:
+ *             schema:
+ *               type: string
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *       400:
+ *         description: Bad Request
+ *       500:
+ *         description: Internal Server Error
+ */
 router.post('/', async (req, res) => {
   const { error } = validateAdmin(req.body);
   if (error) return res.status(400).send(error);
@@ -26,6 +92,29 @@ router.post('/', async (req, res) => {
   res.header('x-auth-token', token).send(_.pick(admin, ['_id', 'email']));
 });
 
+/**
+ * @swagger
+ * /admin:
+ *   get:
+ *     summary: Get all admins
+ *     tags: [Admin]
+ *     responses:
+ *       200:
+ *         description: Returns a list of all admins
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   _id:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *       500:
+ *         description: Internal Server Error
+ */
 router.get('/', async (req, res) => {
   try {
     const admins = await Admin.find().sort('email');
@@ -36,6 +125,45 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/{id}:
+ *   put:
+ *     summary: Update an admin's email
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Admin ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Admin updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *       404:
+ *         description: Admin not found
+ *       500:
+ *         description: Internal Server Error
+ */
 router.put('/:id', async (req, res) => {
   try {
     const admin = await Admin.findById(req.params.id);
@@ -50,6 +178,36 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/{id}:
+ *   get:
+ *     summary: Get an admin by ID
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Admin ID
+ *     responses:
+ *       200:
+ *         description: Returns the admin without password
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *       404:
+ *         description: Admin not found
+ *       500:
+ *         description: Internal Server Error
+ */
 router.get('/:id', async (req, res) => {
   try {
     const admin = await Admin.findById(req.params.id).select('-password');
@@ -61,6 +219,27 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/{id}:
+ *   delete:
+ *     summary: Delete an admin by ID
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Admin ID
+ *     responses:
+ *       200:
+ *         description: Admin deleted successfully
+ *       404:
+ *         description: Admin not found
+ *       500:
+ *         description: Internal Server Error
+ */
 router.delete('/:id', async (req, res) => {
   try {
     const admin = await Admin.findByIdAndRemove(req.params.id);

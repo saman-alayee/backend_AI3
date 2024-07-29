@@ -7,6 +7,7 @@ var nodemailer = require("nodemailer");
 var cors = require('cors')
 var config = require('config');
 const ExcelJS = require("exceljs");
+const swagger = require('./swagger');
 
 var app = express();
 app.use(cors())

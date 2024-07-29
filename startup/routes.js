@@ -1,24 +1,21 @@
-var express = require("express");
-var indexRouter = require("../routes/index");
-var demoRequest = require("../routes/request");
-var demoAuth = require("../routes/auth");
-var demoAuthAdmin = require("../routes/authAdmin");
-var demoUser = require("../routes/user");
-var demoAdmin = require("../routes/admin");
-var demoTicket = require("../routes/tickets");
-var demoMail = require("../routes/mail");
-
+const express = require("express");
+const indexRouter = require("../routes/index");
+const demoAuth = require("../routes/auth");
+const demoAuthAdmin = require("../routes/authAdmin");
+const demoUser = require("../routes/user");
+const demoAdmin = require("../routes/admin");
+const demoTicket = require("../routes/tickets");
+const demoMail = require("../routes/forgetPassword");
+const swagger = require('../swagger');
 
 module.exports = function (app) {
   app.use(express.json());
   app.use("/api", indexRouter);
-  app.use("/api/request", demoRequest);
   app.use("/api/auth", demoAuth);
   app.use("/api/authAdmin", demoAuthAdmin);
   app.use("/api/users", demoUser);
   app.use("/api/admin", demoAdmin);
   app.use("/api/ticket", demoTicket);
-  app.use("/api/mail", demoMail);
-
-
+  app.use("/api/forgetPassword", demoMail);
+  app.use('/api-docs', swagger.serveSwaggerUI, swagger.setupSwaggerUI);
 };
