@@ -65,7 +65,7 @@ const fs = require("fs");
  *       400:
  *         description: Invalid input
  */
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/",auth, upload.single("image"), async (req, res) => {
   const uploadedFile = req.file;
 
   if (!uploadedFile) {
@@ -75,7 +75,7 @@ router.post("/", upload.single("image"), async (req, res) => {
   const attachmentFileUrl = `${req.protocol}://${req.get("host")}/uploads/${
     uploadedFile.filename
   }`;
-
+  console.log(req.header)
   const ticketData = {
     fullName: req.body.fullName,
     email: req.body.email,
