@@ -64,10 +64,10 @@ router.post("/", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let user = await User.findOne({ email: req.body.email });
-  if (!user) return res.status(400).send("user is not exist");
+  if (!user) return res.status(400).send("شما قبلا ثبت نام نکرده اید.");
 
   const validatePassword = await bcrypt.compare(req.body.password, user.password);
-  if (!validatePassword) return res.status(400).send("wrong password");
+  if (!validatePassword) return res.status(400).send("رمز عبور شما درست نمی باشد.");
 
   const accessToken = jwt.sign({_id:user._id,isUser:true},
     config.get("jwtPrivateKey")
