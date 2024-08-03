@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
 const multer = require("multer");
-const jalaali = require('jalaali-js');
+const jalaali = require("jalaali-js");
 
 // Define storage for image uploads using Multer
 const storage = multer.diskStorage({
@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
 });
 
 function generateTicketNumber() {
-  const randomNumber = Math.floor(Math.random() * 10000000); // Generate a random number
+  const randomNumber = Math.floor(Math.random() * 100000000); // Generate a random number
   const ticketNumber = `${randomNumber}`; // Combine the prefix and random number
   return ticketNumber;
 }
@@ -75,15 +75,25 @@ const Ticket = mongoose.model(
         required: true,
         maxlength: 255,
       },
+      assignedTo: {
+        type: String,
+        default: "no one",
+      },
     },
     { timestamps: true }
   )
 );
 
-Ticket.schema.pre('save', function (next) {
+Ticket.schema.pre("save", function (next) {
   const errorTime = new Date(this.errorTime);
-  const jalaaliDate = jalaali.toJalaali(errorTime.getFullYear(), errorTime.getMonth() + 1, errorTime.getDate());
-  this.errorTime = `${jalaaliDate.jy}-${jalaaliDate.jm.toString().padStart(2, '0')}-${jalaaliDate.jd.toString().padStart(2, '0')}`;
+  const jalaaliDate = jalaali.toJalaali(
+    errorTime.getFullYear(),
+    errorTime.getMonth() + 1,
+    errorTime.getDate()
+  );
+  this.errorTime = `${jalaaliDate.jy}-${jalaaliDate.jm
+    .toString()
+    .padStart(2, "0")}-${jalaaliDate.jd.toString().padStart(2, "0")}`;
   next();
 });
 
@@ -98,7 +108,7 @@ function validateTicket(ticket) {
     request: Joi.string().max(255).required(),
     requestTitle: Joi.string().max(255).required(),
     attachmentFile: Joi.string().max(500).required(),
-    // Add validation for the image file
+    assignedTo: Joi.string().optional(), // Validate as an optional string (ObjectId as string)
   });
   const result = schema.validate(ticket);
   return result;

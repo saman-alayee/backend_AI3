@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { Ticket, validate, upload } = require("../models/ticket");
+const { User, validateUser } = require('../models/user');
 const auth = require("../middleware/auth");
 const adminAuth = require("../middleware/adminAuth");
 const path = require("path");
@@ -65,7 +66,7 @@ const fs = require("fs");
  *       400:
  *         description: Invalid input
  */
-router.post("/",auth, upload.single("image"), async (req, res) => {
+router.post("/",adminAuth, upload.single("image"), async (req, res) => {
   const uploadedFile = req.file;
 
   if (!uploadedFile) {
@@ -75,7 +76,6 @@ router.post("/",auth, upload.single("image"), async (req, res) => {
   const attachmentFileUrl = `${req.protocol}://${req.get("host")}/uploads/${
     uploadedFile.filename
   }`;
-  console.log(req.header)
   const ticketData = {
     fullName: req.body.fullName,
     email: req.body.email,
@@ -85,7 +85,9 @@ router.post("/",auth, upload.single("image"), async (req, res) => {
     errorTime: req.body.errorTime,
     request: req.body.request,
     requestTitle: req.body.requestTitle,
-    attachmentFile: attachmentFileUrl, // Save the image URL in the document
+    attachmentFile: attachmentFileUrl,
+    assignedTo: "no one",
+    // Save the image URL in the document
   };
 
   const validationResult = validate(ticketData);
@@ -310,6 +312,76 @@ router.get("/downloadExcel", adminAuth, (req, res) => {
         .send("An error occurred while downloading the Excel file.");
     }
   });
+});
+
+/**
+ * @swagger
+ * /tickets/assign:
+ *   put:
+ *     summary: Assign a ticket to a user by email
+ *     tags: [Tickets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ticketId:
+ *                 type: string
+ *                 description: The ID of the ticket to assign
+ *                 example: 60d5ec49a2e6c03664dd3b88
+ *               email:
+ *                 type: string
+ *                 description: The email of the user to assign the ticket to
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Ticket assigned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Ticket'
+ *       400:
+ *         description: Ticket is already assigned or required fields are missing
+ *       404:
+ *         description: User or Ticket not found
+ *       500:
+ *         description: An error occurred while assigning the ticket
+ */
+router.put('/assign', adminAuth, async (req, res) => {
+  const { ticketId, email } = req.body;
+
+  if (!ticketId || !email) {
+    return res.status(400).send("Ticket ID and user email are required.");
+  }
+
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    // Find the ticket by ID
+    const ticket = await Ticket.findById(ticketId);
+    if (!ticket) {
+      return res.status(404).send("Ticket not found");
+    }
+
+    // Check if the ticket is already assigned
+    if (ticket.assignedTo !== "no one") {
+      return res.status(400).send("This ticket has already been assigned to another user.");
+    }
+
+    // Assign the ticket to the user if not already assigned
+    ticket.assignedTo = user._id;
+    await ticket.save();
+
+    res.status(200).json(ticket);
+  } catch (error) {
+    res.status(500).send("An error occurred while assigning the ticket.");
+  }
 });
 
 module.exports = router;
