@@ -64,10 +64,10 @@ router.post("/", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let user = await User.findOne({ email: req.body.email });
-  if (!user) return res.status(400).send("wrong email or password");
+  if (!user) return res.status(400).send("user is not exist");
 
   const validatePassword = await bcrypt.compare(req.body.password, user.password);
-  if (!validatePassword) return res.status(400).send("wrong email or password");
+  if (!validatePassword) return res.status(400).send("wrong password");
 
   const accessToken = jwt.sign({_id:user._id,isUser:true},
     config.get("jwtPrivateKey")
