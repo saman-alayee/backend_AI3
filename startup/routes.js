@@ -15,7 +15,7 @@ module.exports = function (app) {
   app.use("/api/authAdmin", demoAuthAdmin);
   app.use("/api/users", demoUser);
   app.use("/api/admin", demoAdmin);
-  app.use("/api/ticket", demoTicket);
+  app.use("/api/tickets", demoTicket);
   app.use("/api/forgetPassword", demoMail);
   app.use('/api-docs', swagger.serveSwaggerUI, swagger.setupSwaggerUI);
 };
