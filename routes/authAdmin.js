@@ -9,16 +9,16 @@ const config = require("config");
 /**
  * @swagger
  * tags:
- *   name: AdminAuth
+ *   name: authAdmin
  *   description: Admin authentication endpoints
  */
 
 /**
  * @swagger
- * /adminAuth:
+ * /authAdmin:
  *   post:
  *     summary: Authenticate an admin
- *     tags: [AdminAuth]
+ *     tags: [authAdmin]
  *     requestBody:
  *       required: true
  *       content:

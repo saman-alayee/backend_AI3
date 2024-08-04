@@ -3,7 +3,7 @@ const router = express.Router();
 const { Admin, validateAdmin } = require('../models/admin');
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
-const auth = require('../middleware/auth');
+const adminAuth = require('../middleware/adminAuth');
 
 /**
  * @swagger
@@ -30,8 +30,9 @@ const auth = require('../middleware/auth');
  *       500:
  *         description: Internal Server Error
  */
-router.get('/verify', auth, async (req, res) => {
-  const admin = await Admin.findById(req.user._id).select('-password');
+router.get('/verify', adminAuth, async (req, res) => {
+  console.log(req)
+  const admin = await Admin.findById(req.adminId).select('-password');
   res.send(admin);
 });
 
