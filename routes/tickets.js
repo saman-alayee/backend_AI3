@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { Ticket, validate, upload } = require("../models/ticket");
-const { User, validateUser } = require('../models/user');
+const { Admin } = require("../models/admin");
 const auth = require("../middleware/auth");
 const adminAuth = require("../middleware/adminAuth");
 const path = require("path");
@@ -66,7 +66,7 @@ const fs = require("fs");
  *       400:
  *         description: Invalid input
  */
-router.post("/",adminAuth, upload.single("image"), async (req, res) => {
+router.post("/", adminAuth, upload.single("image"), async (req, res) => {
   const uploadedFile = req.file;
 
   if (!uploadedFile) {
@@ -164,7 +164,7 @@ router.get("/", adminAuth, async (req, res) => {
       page,
       totalPages,
       totalTickets,
-      tickets
+      tickets,
     });
   } catch (error) {
     res.status(500).send("An error occurred while fetching tickets.");
@@ -192,7 +192,6 @@ router.get("/", adminAuth, async (req, res) => {
  *       500:
  *         description: An error occurred while deleting the ticket
  */
-// DELETE route to delete a ticket and its associated image
 router.delete("/:id", adminAuth, async (req, res) => {
   try {
     // Find the ticket by ID
@@ -220,7 +219,9 @@ router.delete("/:id", adminAuth, async (req, res) => {
         }
       } catch (err) {
         console.error(`Error deleting file ${filePath}:`, err.message);
-        return res.status(500).send("An error occurred while deleting the associated file.");
+        return res
+          .status(500)
+          .send("An error occurred while deleting the associated file.");
       }
     }
 
@@ -262,9 +263,8 @@ router.get("/exportToExcel", adminAuth, async (req, res) => {
       "Email",
       "Company name",
       "Licence code",
-      "Problem type ",
+      "Problem type",
       "Error time",
-      "Ticket number",
       "Request title",
       "Request",
       "Attachment",
@@ -282,8 +282,8 @@ router.get("/exportToExcel", adminAuth, async (req, res) => {
         req.licenseCode,
         req.problemType,
         req.errorTime,
-        req.request,
         req.requestTitle,
+        req.request,
         req.attachmentFile,
         req.createdAt.toISOString(), // Convert createdAt date to ISO format
       ]);
@@ -331,7 +331,7 @@ router.get("/downloadExcel", adminAuth, (req, res) => {
  * @swagger
  * /tickets/assign:
  *   put:
- *     summary: Assign a ticket to a user by email
+ *     summary: Assign a ticket to an admin by email
  *     tags: [Tickets]
  *     requestBody:
  *       required: true
@@ -346,8 +346,8 @@ router.get("/downloadExcel", adminAuth, (req, res) => {
  *                 example: 60d5ec49a2e6c03664dd3b88
  *               email:
  *                 type: string
- *                 description: The email of the user to assign the ticket to
- *                 example: user@example.com
+ *                 description: The email of the admin to assign the ticket to
+ *                 example: admin@example.com
  *     responses:
  *       200:
  *         description: Ticket assigned successfully
@@ -358,22 +358,22 @@ router.get("/downloadExcel", adminAuth, (req, res) => {
  *       400:
  *         description: Ticket is already assigned or required fields are missing
  *       404:
- *         description: User or Ticket not found
+ *         description: Admin or Ticket not found
  *       500:
  *         description: An error occurred while assigning the ticket
  */
-router.put('/assign', adminAuth, async (req, res) => {
+router.put("/assign", adminAuth, async (req, res) => {
   const { ticketId, email } = req.body;
 
   if (!ticketId || !email) {
-    return res.status(400).send("Ticket ID and user email are required.");
+    return res.status(400).send("Ticket ID and admin email are required.");
   }
 
   try {
-    // Find the user by email
-    const user = await User.findOne({ email: email });
-    if (!user) {
-      return res.status(404).send("User not found");
+    // Find the admin by email
+    const admin = await Admin.findOne({ email: email });
+    if (!admin) {
+      return res.status(404).send("Admin not found");
     }
 
     // Find the ticket by ID
@@ -384,16 +384,59 @@ router.put('/assign', adminAuth, async (req, res) => {
 
     // Check if the ticket is already assigned
     if (ticket.assignedTo !== "no one") {
-      return res.status(400).send("This ticket has already been assigned to another user.");
+      return res
+        .status(400)
+        .send("This ticket has already been assigned to another admin.");
     }
 
-    // Assign the ticket to the user if not already assigned
-    ticket.assignedTo = user._id;
+    // Assign the ticket to the admin if not already assigned
+    ticket.assignedTo = admin._id;
     await ticket.save();
 
     res.status(200).json(ticket);
   } catch (error) {
     res.status(500).send("An error occurred while assigning the ticket.");
+  }
+});
+
+/**
+ * @swagger
+ * /tickets/myTickets:
+ *   get:
+ *     summary: Get tickets assigned to the logged-in admin
+ *     tags: [Tickets]
+ *     responses:
+ *       200:
+ *         description: A list of tickets assigned to the admin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Ticket'
+ *       404:
+ *         description: No tickets assigned to the admin
+ *       500:
+ *         description: An error occurred while retrieving the tickets
+ */
+router.get("/myTickets", adminAuth, async (req, res) => {
+  try {
+    // Ensure req.adminId is a string
+    const adminId = req.adminId.toString();
+
+    // Fetch tickets assigned to the logged-in admin
+    const tickets = await Ticket.find({ assignedTo: adminId });
+
+    // If no tickets are found, return a 404 status
+    if (tickets.length === 0) {
+      return res.status(404).send("No tickets assigned to you.");
+    }
+
+    // Send the tickets as JSON response
+    res.status(200).json(tickets);
+  } catch (error) {
+    console.error("Error retrieving tickets:", error);
+    res.status(500).send("An error occurred while retrieving the tickets.");
   }
 });
 
