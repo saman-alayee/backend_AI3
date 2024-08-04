@@ -192,31 +192,44 @@ router.get("/", adminAuth, async (req, res) => {
  *       500:
  *         description: An error occurred while deleting the ticket
  */
+// DELETE route to delete a ticket and its associated image
 router.delete("/:id", adminAuth, async (req, res) => {
   try {
-    // Find the request by ID
+    // Find the ticket by ID
     const ticket = await Ticket.findById(req.params.id);
 
     if (!ticket) {
       return res.status(404).send("Ticket with the given ID was not found.");
     }
 
-    // Remove the attachment file from the project folder
+    // If the ticket has an attachment, delete the file
     if (ticket.attachmentFile) {
       const filePath = path.join(
         __dirname,
         "../uploads",
-        path.basename(ticket.attachmentFile)
+        path.basename(ticket.attachmentFile) // Extracts the file name from the URL
       );
-      console.log(filePath);
-      fs.unlinkSync(filePath); // when delete a ticket here i delete attachment file from uploads folder
+
+      // Check if the file exists and delete it
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`File ${filePath} deleted successfully.`);
+        } else {
+          console.log(`File ${filePath} not found.`);
+        }
+      } catch (err) {
+        console.error(`Error deleting file ${filePath}:`, err.message);
+        return res.status(500).send("An error occurred while deleting the associated file.");
+      }
     }
 
-    // Delete the ticket
+    // Delete the ticket from the database
     await Ticket.findByIdAndRemove(req.params.id);
 
-    res.send(ticket);
+    res.status(200).send("Ticket deleted successfully.");
   } catch (error) {
+    console.error("Error in delete route:", error);
     return res.status(500).send("An error occurred while deleting the ticket.");
   }
 });
