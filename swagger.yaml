@@ -1,0 +1,566 @@
+openapi: 3.0.0
+info:
+  title: Ticket and User Management API
+  description: API for managing tickets, users, and authentication for admins and users.
+  version: 1.0.0
+
+paths:
+  /tickets:
+    post:
+      summary: Create a new ticket
+      tags: [Tickets]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                email:
+                  type: string
+                company:
+                  type: string
+                licenseCode:
+                  type: string
+                problemType:
+                  type: string
+                errorTime:
+                  type: string
+                request:
+                  type: string
+                requestTitle:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+      responses:
+        201:
+          description: Ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        400:
+          description: Invalid input
+
+  /tickets/{id}:
+    get:
+      summary: Get all tickets created by a specific user
+      tags: [Tickets]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID to filter tickets
+      responses:
+        200:
+          description: List of tickets created by the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+        404:
+          description: No tickets found
+        500:
+          description: An error occurred
+
+  /tickets/myTickets:
+    get:
+      summary: Get tickets assigned to the logged-in admin
+      tags: [Tickets]
+      responses:
+        200:
+          description: A list of tickets assigned to the admin
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+        404:
+          description: No tickets assigned to the admin
+        500:
+          description: An error occurred
+
+  /tickets/exportToExcel:
+    get:
+      summary: Export tickets to Excel
+      tags: [Tickets]
+      responses:
+        200:
+          description: Excel file generated and sent
+        500:
+          description: An error occurred while exporting to Excel
+
+  /tickets/downloadExcel:
+    get:
+      summary: Download the exported Excel file
+      tags: [Tickets]
+      responses:
+        200:
+          description: Excel file downloaded
+        500:
+          description: An error occurred while downloading the Excel file
+
+  /tickets/assign:
+    put:
+      summary: Assign a ticket to an admin by email
+      tags: [Tickets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticketId:
+                  type: string
+                email:
+                  type: string
+      responses:
+        200:
+          description: Ticket assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        400:
+          description: Ticket is already assigned or required fields are missing
+        404:
+          description: Admin or Ticket not found
+        500:
+          description: An error occurred while assigning the ticket
+
+  /admins/verify:
+    get:
+      summary: Get the current admin's details
+      tags: [Admins]
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Admin details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Admin'
+        401:
+          description: Unauthorized access
+
+  /admins:
+    post:
+      summary: Register a new admin
+      tags: [Admins]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Admin'
+      responses:
+        201:
+          description: Admin registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Admin'
+        400:
+          description: Invalid input or admin already registered
+
+    get:
+      summary: Get a list of all admins
+      tags: [Admins]
+      responses:
+        200:
+          description: List of all admins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Admin'
+        500:
+          description: Internal server error
+
+  /admins/{id}:
+    get:
+      summary: Get details of a specific admin by ID
+      tags: [Admins]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the admin to retrieve
+      responses:
+        200:
+          description: Admin details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Admin'
+        404:
+          description: Admin not found
+        500:
+          description: Internal server error
+
+    put:
+      summary: Update details of a specific admin
+      tags: [Admins]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the admin to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Admin'
+      responses:
+        200:
+          description: Admin updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Admin'
+        404:
+          description: Admin not found
+        500:
+          description: Internal server error
+
+    delete:
+      summary: Delete a specific admin by ID
+      tags: [Admins]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the admin to delete
+      responses:
+        200:
+          description: Admin deleted successfully
+        404:
+          description: Admin not found
+        500:
+          description: Internal server error
+
+  /authAdmin:
+    post:
+      summary: Authenticate an admin
+      tags: [authAdmin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  description: Admin email
+                password:
+                  type: string
+                  description: Admin password
+      responses:
+        200:
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  role:
+                    type: string
+                  token:
+                    type: string
+                  username:
+                    type: string
+                  id:
+                    type: string
+                  email:
+                    type: string
+        400:
+          description: Invalid email or password
+
+  /forgetPassword:
+    post:
+      summary: Send password reset email
+      tags: [Password Reset]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  description: User's email address
+                  example: "user@example.com"
+      responses:
+        200:
+          description: Email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  messageId:
+                    type: string
+                  response:
+                    type: string
+        400:
+          description: Invalid email or user not found
+          content:
+            text/plain:
+              schema:
+                type: string
+                examples:
+                  userNotFound:
+                    summary: User not found
+                    value: "User not found"
+                  invalidEmail:
+                    summary: Invalid email format
+                    value: "Invalid email format"
+        500:
+          description: Error sending email
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Error sending email: <error_message>"
+
+  /users/verify:
+    get:
+      summary: Verify and get the current user's details
+      tags: [Users]
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: The authenticated user's details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+
+  /users:
+    post:
+      summary: Register a new user
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  description: Email address of the new user
+                password:
+                  type: string
+                  description: Password for the new user
+                fullname:
+                  type: string
+                  description: Full name of the new user
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid input or user already registered
+
+    get:
+      summary: Get all users
+      tags: [Users]
+      responses:
+        200:
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        500:
+          description: Internal Server Error
+
+  /users/{id}:
+    get:
+      summary: Get a user by ID
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        200:
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: User not found
+        500:
+          description: Internal Server Error
+
+    put:
+      summary: Update a user's email
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: New email address for the user
+      responses:
+        200:
+          description: User updated successfully
+        404:
+          description: User not found
+        500:
+          description: Internal Server Error
+
+    delete:
+      summary: Delete a user by ID
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        200:
+          description: User deleted successfully
+        404:
+          description: User not found
+        500:
+          description: Internal Server Error
+
+components:
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        _id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        company:
+          type: string
+        licenseCode:
+          type: string
+        problemType:
+          type: string
+        errorTime:
+          type: string
+        request:
+          type: string
+        requestTitle:
+          type: string
+        image:
+          type: string
+          format: binary
+      required:
+        - fullName
+        - email
+        - licenseCode
+        - problemType
+
+    Admin:
+      type: object
+      properties:
+        _id:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+        fullname:
+          type: string
+      required:
+        - email
+        - password
+
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        email:
+          type: string
+        fullname:
+          type: string
+      required:
+        - email
+        - fullname
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: Tickets
+    description: Endpoints for managing tickets
+  - name: Admins
+    description: Endpoints for managing admins
+  - name: authAdmin
+    description: Admin authentication endpoints
+  - name: Password Reset
+    description: Endpoints for password reset
+  - name: Users
+    description: User management endpoints

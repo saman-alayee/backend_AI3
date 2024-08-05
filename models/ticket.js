@@ -79,6 +79,10 @@ const Ticket = mongoose.model(
         type: String,
         default: "no one",
       },
+      createdBy: {
+        type: String,
+        default: "",
+      }, 
     },
     { timestamps: true }
   )
@@ -109,6 +113,7 @@ function validateTicket(ticket) {
     requestTitle: Joi.string().max(255).required(),
     attachmentFile: Joi.string().max(500).required(),
     assignedTo: Joi.string().optional(), // Validate as an optional string (ObjectId as string)
+    createdBy: Joi.string().optional(),
   });
   const result = schema.validate(ticket);
   return result;
