@@ -1,30 +1,42 @@
-const mongoose = require('mongoose');
-const Joi = require('joi');
-const config = require('config');
-const jwt = require('jsonwebtoken');
+const mongoose = require("mongoose");
+const Joi = require("joi");
+const config = require("config");
+const jwt = require("jsonwebtoken");
 
-const adminSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    minlength: 5,
-    maxlength: 255,
-    unique: true,
+const adminSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      minlength: 5,
+      maxlength: 255,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 5,
+      maxlength: 1024,
+    },
+    role: {
+      type: String,
+      enum: ["admin", "superadmin"],
+      default: "admin",
+    },
   },
-  password: {
-    type: String,
-    required: true,
-    minlength: 5,
-    maxlength: 1024,
-  },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 adminSchema.methods.generateAuthToken = function () {
-  const token = jwt.sign({ _id: this._id, role: 'admin' }, config.get('jwtPrivateKey'), { expiresIn: '12h' });
+  const token = jwt.sign(
+    { _id: this._id, role: "admin" },
+    config.get("jwtPrivateKey"),
+    { expiresIn: "12h" }
+  );
   return token;
 };
 
-const Admin = mongoose.model('Admin', adminSchema);
+const Admin = mongoose.model("Admin", adminSchema);
 
 function validateAdmin(admin) {
   const schema = Joi.object({

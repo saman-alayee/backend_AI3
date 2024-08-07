@@ -7,7 +7,6 @@ const adminAuth = require('../middleware/adminAuth');
 
 
 router.get('/verify', adminAuth, async (req, res) => {
-  console.log(req)
   const admin = await Admin.findById(req.adminId).select('-password');
   res.send(admin);
 });
