@@ -70,10 +70,9 @@ const Ticket = mongoose.model(
         required: true,
         maxlength: 255,
       },
-      attachmentFile: {
-        type: String,
+      attachmentFiles: {
+        type: [String], // Array of strings for multiple image URLs
         required: true,
-        maxlength: 255,
       },
       assignedTo: {
         type: String,
@@ -111,7 +110,7 @@ function validateTicket(ticket) {
     errorTime: Joi.string().max(255).required(),
     request: Joi.string().max(255).required(),
     requestTitle: Joi.string().max(255).required(),
-    attachmentFile: Joi.string().max(500).required(),
+    attachmentFiles: Joi.array().items(Joi.string().max(500)).required(), // Array of strings for image URLs
     assignedTo: Joi.string().optional(), // Validate as an optional string (ObjectId as string)
     createdBy: Joi.string().optional(),
   });

@@ -9,17 +9,18 @@ const ExcelJS = require("exceljs");
 const fs = require("fs");
 
 
+router.post('/', auth, upload.array('images'), async (req, res) => {
+  const uploadedFiles = req.files;
 
-router.post("/", auth, upload.single("image"), async (req, res) => {
-  const uploadedFile = req.file;
-
-  if (!uploadedFile) {
-    return res.status(400).send("Please upload an image.");
+  if (!uploadedFiles || uploadedFiles.length === 0) {
+    return res.status(400).send('Please upload at least one image.');
   }
 
-  const attachmentFileUrl = `${req.protocol}://${req.get("host")}/uploads/${
-    uploadedFile.filename
-  }`;
+  // Generate file URLs
+  const attachmentFileUrls = uploadedFiles.map(file =>
+    `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
+  );
+
   const ticketData = {
     fullName: req.body.fullName,
     email: req.body.email,
@@ -29,8 +30,8 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
     errorTime: req.body.errorTime,
     request: req.body.request,
     requestTitle: req.body.requestTitle,
-    attachmentFile: attachmentFileUrl,
-    assignedTo: "no one",
+    attachmentFiles: attachmentFileUrls, // Use array of URLs
+    assignedTo: 'no one',
     createdBy: req.userId,
   };
 
@@ -48,6 +49,8 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
     res.status(500).send(error);
   }
 });
+
+
 
 router.get("/:id", auth, async (req, res) => {
   console.log(req.params.id)
@@ -107,35 +110,36 @@ router.get("/", adminAuth, async (req, res) => {
 
 router.delete("/:id", adminAuth, async (req, res) => {
   try {
-    // Find the ticket by ID
     const ticket = await Ticket.findById(req.params.id);
 
     if (!ticket) {
       return res.status(404).send("Ticket with the given ID was not found.");
     }
 
-    // If the ticket has an attachment, delete the file
-    if (ticket.attachmentFile) {
-      const filePath = path.join(
-        __dirname,
-        "../uploads",
-        path.basename(ticket.attachmentFile) // Extracts the file name from the URL
-      );
+    // If the ticket has attachments, delete the files
+    if (ticket.attachmentFiles && ticket.attachmentFiles.length > 0) {
+      ticket.attachmentFiles.forEach(fileUrl => {
+        const filePath = path.join(
+          __dirname,
+          "../uploads",
+          path.basename(fileUrl) // Extracts the file name from the URL
+        );
 
-      // Check if the file exists and delete it
-      try {
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log(`File ${filePath} deleted successfully.`);
-        } else {
-          console.log(`File ${filePath} not found.`);
+        // Check if the file exists and delete it
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`File ${filePath} deleted successfully.`);
+          } else {
+            console.log(`File ${filePath} not found.`);
+          }
+        } catch (err) {
+          console.error(`Error deleting file ${filePath}:`, err.message);
+          return res
+            .status(500)
+            .send("An error occurred while deleting the associated file.");
         }
-      } catch (err) {
-        console.error(`Error deleting file ${filePath}:`, err.message);
-        return res
-          .status(500)
-          .send("An error occurred while deleting the associated file.");
-      }
+      });
     }
 
     // Delete the ticket from the database
@@ -147,6 +151,7 @@ router.delete("/:id", adminAuth, async (req, res) => {
     return res.status(500).send("An error occurred while deleting the ticket.");
   }
 });
+
 
 router.get("/exportToExcel", adminAuth, async (req, res) => {
   try {
