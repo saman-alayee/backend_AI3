@@ -5,6 +5,11 @@ const jwt = require("jsonwebtoken");
 
 const adminSchema = new mongoose.Schema(
   {
+    fullname:{
+      type:String,
+      required:true,
+      maxlength:124
+    },
     email: {
       type: String,
       required: true,
@@ -42,6 +47,7 @@ function validateAdmin(admin) {
   const schema = Joi.object({
     email: Joi.string().min(5).max(255).required().email(),
     password: Joi.string().min(5).max(1024).required(),
+    fullname:Joi.string().max(124).required()
   });
   return schema.validate(admin);
 }

@@ -50,8 +50,6 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
   }
 });
 
-
-
 router.get("/:id", auth, async (req, res) => {
   console.log(req.params.id)
   try {
@@ -151,7 +149,6 @@ router.delete("/:id", adminAuth, async (req, res) => {
     return res.status(500).send("An error occurred while deleting the ticket.");
   }
 });
-
 
 router.get("/exportToExcel", adminAuth, async (req, res) => {
   try {

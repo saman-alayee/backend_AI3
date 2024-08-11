@@ -18,13 +18,13 @@ router.post('/', async (req, res) => {
   let admin = await Admin.findOne({ email: req.body.email });
   if (admin) return res.status(400).send('Admin is already registered.');
 
-  admin = new Admin(_.pick(req.body, ['email', 'password']));
+  admin = new Admin(_.pick(req.body, ['email', 'password','fullname']));
   const salt = await bcrypt.genSalt(10);
   admin.password = await bcrypt.hash(admin.password, salt);
 
   await admin.save();
   const token = admin.generateAuthToken();
-  res.header('x-auth-token', token).send(_.pick(admin, ['_id', 'email']));
+  res.header('x-auth-token', token).send(_.pick(admin, ['_id', 'email',"fullname"]));
 });
 
 router.get('/', async (req, res) => {
