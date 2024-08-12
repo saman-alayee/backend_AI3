@@ -7,12 +7,21 @@ function auth(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
-    if (!decoded.isUser) return res.status(403).send('Access denied.');
+
+    // Check if the user is not verified
+    if (!decoded.isVerified) {
+      return res.status(403).send("Access denied. Please verify your account.");
+    }
+
+    // Check if the user is not authorized
+    if (!decoded.isUser) {
+      return res.status(403).send("Access denied.");
+    }
+    
     req.userId = decoded._id;
     next();
   } catch (ex) {
     res.status(400).send("Invalid token");
-    console.log( jwt.verify(token, config.get("jwtPrivateKey")))
   }
 }
 
