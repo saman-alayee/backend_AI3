@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
   if (!validatePassword) return res.status(400).send("رمز عبور اشتباه است.");
 
   const accessToken = jwt.sign(
-    { _id: user._id, isUser: true },
+    { _id: user._id, isUser: true,isVerified:true },
     config.get("jwtPrivateKey")
   );
 

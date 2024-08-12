@@ -9,6 +9,7 @@ const ExcelJS = require("exceljs");
 const fs = require("fs");
 
 
+
 router.post('/', auth, upload.array('images'), async (req, res) => {
   const uploadedFiles = req.files;
 
@@ -50,37 +51,84 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
   }
 });
 
-router.get("/:id", auth, async (req, res) => {
-  console.log(req.params.id)
+// users tickets
+router.get("/users", auth, async (req, res) => {
   try {
-    const userId = req.params.id;
-    const tickets = await Ticket.find({ createdBy: userId });
+    const userId = req.userId;
+
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 10; 
+
+    const skip = (page - 1) * limit;
+
+    const tickets = await Ticket.find({ createdBy: userId }).sort({ createdAt: -1 }).skip(skip).limit(limit);
+
     if (tickets.length === 0) {
-      return res.status(404).send("no tickets");
+      return res.status(404).send("No tickets found.");
     }
-    res.status(200).json(tickets);
+    const totalTickets = await Ticket.countDocuments({ createdBy: userId });
+    res.status(200).json({
+      totalTickets,
+      totalPages: Math.ceil(totalTickets / limit),
+      currentPage: page,
+      tickets,
+    });
   } catch (error) {
     console.error("Error retrieving tickets:", error);
     res.status(500).send("An error occurred while retrieving the tickets.");
   }
 });
 
+// single ticket of user 
+router.get('/users/:id',auth,async (req,res) => {
+  try {
+    const userId = req.userId;
+    const ticketId = req.params.id;
+
+    const ticket = await Ticket.findOne({_id:ticketId,createdBy:userId});
+
+    if(!ticket) {
+      return res.status(404).send("Ticket not found ");
+    }
+
+    res.status(200).json(ticket);
+  }
+  catch (error) {
+    console.error("Error retrieving ticket:", error);
+    res.status(500).send("An error occurred while retrieving the ticket.");
+  }
+})
+// admins assign tickets 
 router.get("/myTickets", adminAuth, async (req, res) => {
   try {
     const adminId = req.adminId.toString();
+    const page = parseInt(req.query.page) || 1;  
+    const limit = parseInt(req.query.limit) || 10;  
 
-    const tickets = await Ticket.find({ assignedTo: adminId });
+    const tickets = await Ticket.find({ assignedTo: adminId })
+      .sort({ createdAt: -1 })  
+      .skip((page - 1) * limit)  
+      .limit(limit);  
+
     if (tickets.length === 0) {
       return res.status(404).send("No tickets assigned to you.");
     }
 
-    res.status(200).json(tickets);
+    const totalTickets = await Ticket.countDocuments({ assignedTo: adminId });
+
+    res.status(200).json({
+      tickets,
+      currentPage: page,
+      totalPages: Math.ceil(totalTickets / limit),
+      totalTickets,
+    });
   } catch (error) {
     console.error("Error retrieving tickets:", error);
     res.status(500).send("An error occurred while retrieving the tickets.");
   }
 });
 
+// all tickets by made user
 router.get("/", adminAuth, async (req, res) => {
   try {
     // Parse query parameters

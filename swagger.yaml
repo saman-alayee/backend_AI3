@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Ticket and User Management API
-  description: API for managing tickets, users, and authentication for admins and users.
+  description: API for managing tickets, users, authentication, and chat messages.
   version: 1.0.0
 
 paths:
@@ -32,9 +32,11 @@ paths:
                   type: string
                 requestTitle:
                   type: string
-                attachmentFiles:
-                  type: string
-                  format: binary
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
       responses:
         201:
           description: Ticket created successfully
@@ -45,9 +47,47 @@ paths:
         400:
           description: Invalid input
 
-  /tickets/{id}:
+  /tickets/users:
     get:
-      summary: Get all tickets created by a specific user
+      summary: Get tickets created by the logged-in user
+      tags: [Tickets]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of tickets per page
+      responses:
+        200:
+          description: List of tickets created by the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalTickets:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  currentPage:
+                    type: integer
+                  tickets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Ticket'
+        404:
+          description: No tickets found
+        500:
+          description: An error occurred
+
+  /tickets/users/{id}:
+    get:
+      summary: Get a specific ticket created by the logged-in user
       tags: [Tickets]
       parameters:
         - in: path
@@ -55,18 +95,16 @@ paths:
           required: true
           schema:
             type: string
-          description: User ID to filter tickets
+          description: Ticket ID to retrieve
       responses:
         200:
-          description: List of tickets created by the user
+          description: Ticket details retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Ticket'
+                $ref: '#/components/schemas/Ticket'
         404:
-          description: No tickets found
+          description: Ticket not found
         500:
           description: An error occurred
 
@@ -74,15 +112,35 @@ paths:
     get:
       summary: Get tickets assigned to the logged-in admin
       tags: [Tickets]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Number of tickets per page
       responses:
         200:
-          description: A list of tickets assigned to the admin
+          description: List of tickets assigned to the admin
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Ticket'
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Ticket'
+                  currentPage:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  totalTickets:
+                    type: integer
         404:
           description: No tickets assigned to the admin
         500:
@@ -485,6 +543,66 @@ paths:
         500:
           description: Internal Server Error
 
+  /chats/{ticketId}:
+    get:
+      summary: Get all chat messages for a specific ticket
+      tags: [Chats]
+      parameters:
+        - in: path
+          name: ticketId
+          required: true
+          schema:
+            type: string
+          description: The ID of the ticket to retrieve chat messages for
+      responses:
+        200:
+          description: List of chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chat'
+        404:
+          description: No chat messages found for this ticket
+        500:
+          description: Internal Server Error
+
+    post:
+      summary: Add a new chat message to a specific ticket
+      tags: [Chats]
+      parameters:
+        - in: path
+          name: ticketId
+          required: true
+          schema:
+            type: string
+          description: The ID of the ticket to add a chat message to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: string
+                  description: User who is sending the message
+                message:
+                  type: string
+                  description: The chat message
+      responses:
+        201:
+          description: Chat message added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chat'
+        404:
+          description: Ticket not found
+        500:
+          description: Internal Server Error
+
 components:
   schemas:
     Ticket:
@@ -508,9 +626,11 @@ components:
           type: string
         requestTitle:
           type: string
-        attachmentFiles:
-          type: string
-          format: binary
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
       required:
         - fullName
         - email
@@ -547,6 +667,25 @@ components:
         - email
         - fullname
 
+    Chat:
+      type: object
+      properties:
+        _id:
+          type: string
+        ticketId:
+          type: string
+        user:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - ticketId
+        - user
+        - message
+
   securitySchemes:
     BearerAuth:
       type: http
@@ -564,3 +703,5 @@ tags:
     description: Endpoints for password reset
   - name: Users
     description: User management endpoints
+  - name: Chats
+    description: Endpoints for managing chat messages
