@@ -63,7 +63,7 @@ const Ticket = mongoose.model(
       request: {
         type: String,
         required: true,
-        maxlength: 255,
+    
       },
       requestTitle: {
         type: String,
@@ -107,7 +107,7 @@ function validateTicket(ticket) {
     licenseCode: Joi.string().max(255).required(),
     problemType: Joi.string().max(30).required(),
     errorTime: Joi.string().max(255).required(),
-    request: Joi.string().max(255).required(),
+    request: Joi.string().required(),
     requestTitle: Joi.string().max(255).required(),
     attachmentFiles: Joi.array().items(Joi.string().max(500)), // Array of strings for image URLs
     assignedTo: Joi.string().optional(), // Validate as an optional string (ObjectId as string)
