@@ -51,7 +51,8 @@ router.post("/", async (req, res) => {
 
   res.json({
     message:"User registered. Please verify your email with the OTP sent to you.",
-    isVerified:user.isVerified
+    isVerified:user.isVerified,
+    email:user.email
   });
 });
 
