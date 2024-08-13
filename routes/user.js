@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const superAdmin = require("../middleware/superAdmin");
 const auth = require("../middleware/auth");
 const sendOtp = require("../utils/sendOtp"); 
+const { resolve } = require("path/win32");
 
 
 
@@ -27,15 +28,17 @@ router.post("/", async (req, res) => {
     if (!user.isVerified) {
       // User exists but is not verified, resend OTP
       await sendOtp(user);
-      return res.status(400).json({
+      return res.json({
         message: "Account exists but is not verified. OTP resent.",
-        isVerified: user.isVerified
+        isVerified: user.isVerified,
+        email:user.email
       });
     } else {
       // User already registered and verified
-      return res.status(400).json({
+      return res.json({
         message:"User already registered. Please log in.",
-        isVerified:user.isVerified
+        isVerified:user.isVerified,
+        email:user.email
       });
     }
   }

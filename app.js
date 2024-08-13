@@ -32,7 +32,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 // Define base URL
-const baseUrl = 'http://localhost:5000';
+const baseUrl = 'http://localhost:3000';
 
 // Middleware to log client IP
 app.use((req, res, next) => {

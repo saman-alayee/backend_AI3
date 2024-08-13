@@ -22,6 +22,8 @@ router.post("/", async (req, res) => {
     return res.status(403).json({
       message: "حساب کاربری شما تایید نشده است. لطفا کد ارسال شده را وارد کنید.",
       isVerified: false,
+      email:user.email
+      
     });
   }
 
