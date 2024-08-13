@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
   if (!user.isVerified) {
     // User exists but is not verified
     await sendOtp(user); // Resend OTP
-    return res.status(403).json({
+    return res.json({
       message: "حساب کاربری شما تایید نشده است. لطفا کد ارسال شده را وارد کنید.",
       isVerified: false,
       email:user.email
