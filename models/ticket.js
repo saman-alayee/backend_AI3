@@ -109,7 +109,7 @@ function validateTicket(ticket) {
     errorTime: Joi.string().max(255).required(),
     request: Joi.string().required(),
     requestTitle: Joi.string().max(255).required(),
-    attachmentFiles: Joi.array().items(Joi.string().max(500)), // Array of strings for image URLs
+    attachmentFiles: Joi.array().items(Joi.string().max(500)).optional(), // Array of strings for image URLs
     assignedTo: Joi.string().optional(), // Validate as an optional string (ObjectId as string)
     createdBy: Joi.string().optional(),
   });
