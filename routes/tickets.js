@@ -63,9 +63,7 @@ router.get("/users", auth, async (req, res) => {
 
     const tickets = await Ticket.find({ createdBy: userId }).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
-    if (tickets.length === 0) {
-      return res.status(200).json([]);
-    }
+  
     const totalTickets = await Ticket.countDocuments({ createdBy: userId });
     res.status(200).json({
       totalTickets,
