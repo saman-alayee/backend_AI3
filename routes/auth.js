@@ -22,7 +22,7 @@ router.post("/", async (req, res) => {
     return res.json({
       message: "حساب کاربری شما تایید نشده است. لطفا کد ارسال شده را وارد کنید.",
       isVerified: false,
-      email:user.email
+      email:user.email,
       
     });
   }
@@ -42,7 +42,9 @@ router.post("/", async (req, res) => {
     username: user.name,
     id: user._id,
     email: user.email,
-    isVerified:user.isVerified
+    isVerified:user.isVerified,
+    fullname:user.fullname
+
   });
 });
 
