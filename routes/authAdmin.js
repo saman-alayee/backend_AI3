@@ -24,7 +24,7 @@ router.post("/", async (req, res) => {
     status: "success",
     role: "admin",
     token: token,
-    username: admin.name,
+    fullname: admin.fullname,
     id: admin._id,
     email: admin.email,
   });
