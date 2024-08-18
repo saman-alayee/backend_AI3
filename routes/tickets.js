@@ -134,9 +134,9 @@ router.get("/", adminAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not provided
     const skip = (page - 1) * limit;
 
-    const tickets = await Ticket.find().skip(skip).limit(limit);
+    const tickets = await Ticket.find({ createdBy: userId }).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
-    const totalTickets = await Ticket.countDocuments();
+    const totalTickets = await Ticket.countDocuments({ createdBy: userId });
 
     const totalPages = Math.ceil(totalTickets / limit);
 
