@@ -13,9 +13,9 @@ const fs = require("fs");
 router.post('/', auth, upload.array('images'), async (req, res) => {
   const uploadedFiles = req.files;
 
-  if (!uploadedFiles || uploadedFiles.length === 0) {
-    return res.status(400).send('Please upload at least one image.');
-  }
+  // if (!uploadedFiles || uploadedFiles.length === 0) {
+  //   return res.status(400).send('Please upload at least one image.');
+  // }
 
   // Generate file URLs
   const attachmentFileUrls = uploadedFiles.map(file =>

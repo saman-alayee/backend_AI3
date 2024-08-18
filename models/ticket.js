@@ -86,18 +86,7 @@ const Ticket = mongoose.model(
   )
 );
 
-Ticket.schema.pre("save", function (next) {
-  const errorTime = new Date(this.errorTime);
-  const jalaaliDate = jalaali.toJalaali(
-    errorTime.getFullYear(),
-    errorTime.getMonth() + 1,
-    errorTime.getDate()
-  );
-  this.errorTime = `${jalaaliDate.jy}-${jalaaliDate.jm
-    .toString()
-    .padStart(2, "0")}-${jalaaliDate.jd.toString().padStart(2, "0")}`;
-  next();
-});
+
 
 function validateTicket(ticket) {
   const schema = Joi.object({
