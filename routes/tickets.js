@@ -152,6 +152,27 @@ router.get("/", adminAuth, async (req, res) => {
   }
 });
 
+// get single 
+router.get("/:id", adminAuth, async (req, res) => {
+  try {
+    // Get ticket ID from the route parameters
+    const ticketId = req.params.id;
+
+    // Fetch the ticket from the database by ID
+    const ticket = await Ticket.findById(ticketId);
+
+    // If ticket is not found, return a 404 response
+    if (!ticket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    // Send the found ticket as a response
+    res.status(200).json(ticket);
+  } catch (error) {
+    res.status(500).send("An error occurred while fetching the ticket.");
+  }
+});
+
 router.delete("/:id", adminAuth, async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
