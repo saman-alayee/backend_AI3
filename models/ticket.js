@@ -105,6 +105,7 @@ function validateTicket(ticket) {
     attachmentFiles: Joi.array().items(Joi.string().max(500)).optional(), // Array of strings for image URLs
     assignedTo: Joi.string().optional(), // Validate as an optional string (ObjectId as string)
     createdBy: Joi.string().optional(),
+    status:Joi.string().required(),
   });
   const result = schema.validate(ticket);
   return result;

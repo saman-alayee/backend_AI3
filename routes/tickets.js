@@ -57,15 +57,50 @@ router.get("/users", auth, async (req, res) => {
   try {
     const userId = req.userId;
 
-    const page = parseInt(req.query.page) || 1; 
-    const limit = parseInt(req.query.limit) || 10; 
-
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const tickets = await Ticket.find({ createdBy: userId }).sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const filter = { createdBy: userId };
 
-  
-    const totalTickets = await Ticket.countDocuments({ createdBy: userId });
+    // Filter by date (single day)
+    if (req.query.date) {
+      const date = new Date(req.query.date);
+
+      // Validate date
+      if (isNaN(date.getTime())) {
+        return res.status(400).send("Invalid date format. Use ISO 8601 format.");
+      }
+
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+      filter.createdAt = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    // Filter by status
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    // Filter by problemType
+    if (req.query.problemType) {
+      filter.problemType = req.query.problemType;
+    }
+
+    // Filter by company
+    if (req.query.company) {
+      filter.company = req.query.company;
+    }
+
+    // Fetch tickets with filter, sort, skip, and limit
+    const tickets = await Ticket.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
+
+    const totalTickets = await Ticket.countDocuments(filter);
+
     res.status(200).json({
       totalTickets,
       totalPages: Math.ceil(totalTickets / limit),
@@ -77,6 +112,8 @@ router.get("/users", auth, async (req, res) => {
     res.status(500).send("An error occurred while retrieving the tickets.");
   }
 });
+
+
 
 // single ticket of user 
 router.get('/users/:id',auth,async (req,res) => {
@@ -305,6 +342,7 @@ router.put("/assign", adminAuth, async (req, res) => {
 
     // Find the ticket by ID
     const ticket = await Ticket.findById(ticketId);
+
     if (!ticket) {
       return res.status(404).send("Ticket not found");
     }
@@ -318,6 +356,7 @@ router.put("/assign", adminAuth, async (req, res) => {
 
     // Assign the ticket to the admin if not already assigned
     ticket.assignedTo = admin._id;
+    ticket.status = "در حال انجام"
     await ticket.save();
 
     res.status(200).json(ticket);
