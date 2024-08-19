@@ -70,6 +70,10 @@ const Ticket = mongoose.model(
         required: true,
         maxlength: 255,
       },
+      status:{
+        type:String,
+        default:"در حال بررسی "
+      },
       attachmentFiles: {
         type: [String], // Array of strings for multiple image URLs
       },
