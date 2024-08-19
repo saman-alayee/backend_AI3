@@ -364,5 +364,31 @@ router.put("/assign", adminAuth, async (req, res) => {
     res.status(500).send("An error occurred while assigning the ticket.");
   }
 });
+// Route to change the status of a ticket to "finished" and save endDate
+router.put("/:id/finish", adminAuth, async (req, res) => {
+  try {
+    const ticketId = req.params.id;
+
+    // Find the ticket by ID
+    const ticket = await Ticket.findById(ticketId);
+
+    // If ticket not found, return 404
+    if (!ticket) {
+      return res.status(404).send("Ticket not found");
+    }
+
+    // Update the status and set the endDate
+    ticket.status = "تمام شده";
+    ticket.endDate = new Date(); // Set the current date as endDate
+
+    // Save the updated ticket
+    await ticket.save();
+
+    res.status(200).json(ticket);
+  } catch (error) {
+    console.error("Error finishing ticket:", error);
+    res.status(500).send("An error occurred while updating the ticket status.");
+  }
+});
 
 module.exports = router;

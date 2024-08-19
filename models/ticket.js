@@ -1,7 +1,6 @@
-const Joi = require("joi");
 const mongoose = require("mongoose");
+const Joi = require("joi");
 const multer = require("multer");
-const jalaali = require("jalaali-js");
 
 // Define storage for image uploads using Multer
 const storage = multer.diskStorage({
@@ -21,76 +20,91 @@ function generateTicketNumber() {
 
 const upload = multer({ storage: storage });
 
-const Ticket = mongoose.model(
-  "Ticket",
-  new mongoose.Schema(
-    {
-      fullName: {
-        type: String,
-        required: true,
-        maxlength: 20,
-      },
-      email: {
-        type: String,
-        required: true,
-        maxlength: 100,
-      },
-      company: {
-        type: String,
-        required: true,
-        maxlength: 50,
-      },
-      licenseCode: {
-        type: String,
-        required: true,
-        maxlength: 255,
-      },
-      problemType: {
-        type: String,
-        required: true,
-        maxlength: 30,
-      },
-      errorTime: {
-        type: String,
-        required: true,
-        maxlength: 255,
-      },
-      ticketNumber: {
-        type: String,
-        default: generateTicketNumber, // Generate a ticket number when creating a new ticket
-        unique: true, // Ensure uniqueness of ticket numbers
-      },
-      request: {
-        type: String,
-        required: true,
-    
-      },
-      requestTitle: {
-        type: String,
-        required: true,
-        maxlength: 255,
-      },
-      status:{
-        type:String,
-        default:"در حال بررسی "
-      },
-      attachmentFiles: {
-        type: [String], // Array of strings for multiple image URLs
-      },
-      assignedTo: {
-        type: String,
-        default: "no one",
-      },
-      createdBy: {
-        type: String,
-        default: "",
-      }, 
+const ticketSchema = new mongoose.Schema(
+  {
+    fullName: {
+      type: String,
+      required: true,
+      maxlength: 20,
     },
-    { timestamps: true }
-  )
+    email: {
+      type: String,
+      required: true,
+      maxlength: 100,
+    },
+    company: {
+      type: String,
+      required: true,
+      maxlength: 50,
+    },
+    licenseCode: {
+      type: String,
+      required: true,
+      maxlength: 255,
+    },
+    problemType: {
+      type: String,
+      required: true,
+      maxlength: 30,
+    },
+    errorTime: {
+      type: String,
+      required: true,
+      maxlength: 255,
+    },
+    ticketNumber: {
+      type: String,
+      default: generateTicketNumber,
+      unique: true,
+    },
+    request: {
+      type: String,
+      required: true,
+    },
+    requestTitle: {
+      type: String,
+      required: true,
+      maxlength: 255,
+    },
+    status: {
+      type: String,
+      default: "در حال بررسی",
+    },
+    attachmentFiles: {
+      type: [String],
+    },
+    assignedTo: {
+      type: String,
+      default: "no one",
+    },
+    createdBy: {
+      type: String,
+      default: "",
+    },
+    endDate: {
+      type: Date,
+      default: null, // Optional field for end date
+    },
+  },
+  { timestamps: true }
 );
 
+// Define a virtual field for time taken in days using endDate
+ticketSchema.virtual('timeTaken').get(function () {
+  if (!this.endDate || !this.createdAt) return null; // If either date is not set, return null
 
+  const createdAt = new Date(this.createdAt);
+  const endDate = new Date(this.endDate);
+  const timeDifference = endDate - createdAt; // Time difference in milliseconds
+
+  // Convert to days and ensure at least 1 day is shown
+  const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+  return daysDifference > 0 ? daysDifference : 1; // Return 1 if difference is 0
+});
+
+// Ensure virtual fields are serialized
+ticketSchema.set('toObject', { virtuals: true });
+ticketSchema.set('toJSON', { virtuals: true });
 
 function validateTicket(ticket) {
   const schema = Joi.object({
@@ -102,14 +116,17 @@ function validateTicket(ticket) {
     errorTime: Joi.string().max(255).required(),
     request: Joi.string().required(),
     requestTitle: Joi.string().max(255).required(),
-    attachmentFiles: Joi.array().items(Joi.string().max(500)).optional(), // Array of strings for image URLs
-    assignedTo: Joi.string().optional(), // Validate as an optional string (ObjectId as string)
+    attachmentFiles: Joi.array().items(Joi.string().max(500)).optional(),
+    assignedTo: Joi.string().optional(),
     createdBy: Joi.string().optional(),
-    status:Joi.string().required(),
+    status: Joi.string().required(),
+    endDate: Joi.date().iso().optional(),
   });
   const result = schema.validate(ticket);
   return result;
 }
+
+const Ticket = mongoose.model("Ticket", ticketSchema);
 
 exports.Ticket = Ticket;
 exports.validate = validateTicket;
