@@ -18,8 +18,8 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
   // }
 
   // Generate file URLs
-  const attachmentFileUrls = uploadedFiles.map(file =>
-    `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
+  const attachmentFileUrls = uploadedFiles?.map(file =>
+    `${req.protocol}://${req.get('host')}/uploads/${file.filename}` || []
   );
 
   const ticketData = {
