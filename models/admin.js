@@ -26,7 +26,6 @@ const adminSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ["admin", "superadmin"],
-      default: "admin",
     },
   },
   { timestamps: true }
@@ -34,7 +33,7 @@ const adminSchema = new mongoose.Schema(
 
 adminSchema.methods.generateAuthToken = function () {
   const token = jwt.sign(
-    { _id: this._id, role: "admin" },
+    { _id: this._id,role:this.role },
     config.get("jwtPrivateKey"),
     { expiresIn: "12h" }
   );

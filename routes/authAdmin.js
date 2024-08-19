@@ -15,14 +15,13 @@ router.post("/", async (req, res) => {
 
   const validPassword = await bcrypt.compare(req.body.password, admin.password);
   if (!validPassword) return res.status(400).send("رمز عبور اشتباه می باشد.");
-
   const token = jwt.sign(
-    { _id: admin._id, isAdmin: true },
+    { _id: admin._id, isAdmin: true, role:admin.role },
     config.get("jwtPrivateKey")
   );
   res.json({
     status: "success",
-    role: "admin",
+    role: admin.role,
     token: token,
     fullname: admin.fullname,
     id: admin._id,
