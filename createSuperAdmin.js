@@ -24,7 +24,7 @@ async function createSuperAdmin(email, password) {
     admin = new Admin({
       email,
       password: hashedPassword,
-      fullname: 'Super Admin',
+      fullname,
       role: 'superadmin',
     });
 
@@ -41,9 +41,10 @@ async function createSuperAdmin(email, password) {
 // Read command-line arguments
 const email = process.argv[2];
 const password = process.argv[3];
+const fullname = process.argv[4];
 
 if (!email || !password) {
-  console.error('Usage: node createSuperAdmin.js <email> <password>');
+  console.error('Usage: node createSuperAdmin.js <email> <password> <fullname>');
   process.exit(1);
 }
 

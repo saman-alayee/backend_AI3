@@ -258,73 +258,6 @@ router.delete("/:id", adminAuth, async (req, res) => {
   }
 });
 
-router.get("/exportToExcel", adminAuth, async (req, res) => {
-  try {
-    // Fetch all requests from the database
-    const tickets = await Ticket.find();
-
-    // Create a new Excel workbook and worksheet
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Tickets");
-
-    // Define headers for the Excel file
-    const headers = [
-      "Index",
-      "Full name",
-      "Email",
-      "Company name",
-      "Licence code",
-      "Problem type",
-      "Error time",
-      "Request title",
-      "Request",
-      "Attachment",
-      "Created At",
-    ];
-    worksheet.addRow(headers);
-
-    // Add data rows to the worksheet
-    tickets.forEach((req, index) => {
-      worksheet.addRow([
-        index + 1,
-        req.fullName,
-        req.email,
-        req.company,
-        req.licenseCode,
-        req.problemType,
-        req.errorTime,
-        req.requestTitle,
-        req.request,
-        req.attachmentFile,
-        req.createdAt.toISOString(), // Convert createdAt date to ISO format
-      ]);
-    });
-
-    // Generate a file path for the Excel file
-    const exportPath = path.join(__dirname, "../exports/tickets.xlsx"); // Change this path as needed
-
-    // Save the Excel file
-    await workbook.xlsx.writeFile(exportPath);
-
-    res.sendFile(exportPath);
-  } catch (error) {
-    console.error("Error exporting to Excel:", error);
-    res.status(500).send("An error occurred while exporting to Excel.");
-  }
-});
-
-router.get("/downloadExcel", adminAuth, (req, res) => {
-  const filePath = path.join(__dirname, "../exports/tickets.xlsx"); // Change this path as needed
-
-  res.download(filePath, "Tickets.xlsx", (err) => {
-    if (err) {
-      console.error("Error downloading Excel file:", err);
-      res
-        .status(500)
-        .send("An error occurred while downloading the Excel file.");
-    }
-  });
-});
 
 router.put("/assign", adminAuth, async (req, res) => {
   const { ticketId, email } = req.body;
@@ -346,9 +279,7 @@ router.put("/assign", adminAuth, async (req, res) => {
     if (!ticket) {
       return res.status(404).send("Ticket not found");
     }
-
-    // Check if the ticket is already assigned
-    if (ticket.assignedTo !== "no one") {
+    if (ticket.assignedTo === "no one") {
       return res
         .status(400)
         .send("This ticket has already been assigned to another admin.");
@@ -369,25 +300,48 @@ router.put("/:id/finish", adminAuth, async (req, res) => {
   try {
     const ticketId = req.params.id;
 
-    // Find the ticket by ID
     const ticket = await Ticket.findById(ticketId);
 
-    // If ticket not found, return 404
     if (!ticket) {
       return res.status(404).send("Ticket not found");
     }
 
-    // Update the status and set the endDate
     ticket.status = "تمام شده";
-    ticket.endDate = new Date(); // Set the current date as endDate
+    ticket.endDate = new Date(); 
 
-    // Save the updated ticket
     await ticket.save();
 
     res.status(200).json(ticket);
   } catch (error) {
     console.error("Error finishing ticket:", error);
     res.status(500).send("An error occurred while updating the ticket status.");
+  }
+});
+
+router.put("/:id", adminAuth, async (req, res) => {
+  try {
+    const ticketId = req.params.id;
+    const ticket = await Ticket.findById(ticketId);
+
+    if (!ticket) {
+      return res.status(404).send("Ticket not found");
+    }
+
+    const { status, endDate } = req.body;
+
+    if (!status) {
+      return res.status(400).send("Status is required.");
+    }
+
+    ticket.status = status;
+    ticket.endDate = new Date(endDate);
+
+    await ticket.save();
+
+    res.status(200).json(ticket);
+  } catch (error) {
+    console.error("Error updating ticket:", error);
+    res.status(500).send("An error occurred while updating the ticket.");
   }
 });
 

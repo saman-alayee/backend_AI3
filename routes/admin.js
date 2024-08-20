@@ -11,23 +11,32 @@ router.get('/verify', adminAuth, async (req, res) => {
   res.send(admin);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', adminAuth, async (req, res) => {
   const { error } = validateAdmin(req.body);
-  if (error) return res.status(400).send(error);
+  if (error) return res.status(400).send(error.details[0].message);
 
   let admin = await Admin.findOne({ email: req.body.email });
   if (admin) return res.status(400).send('Admin is already registered.');
 
-  admin = new Admin(_.pick(req.body, ['email', 'password','fullname']));
+  // Include the role when creating the new admin
+  admin = new Admin({
+    email: req.body.email,
+    password: req.body.password,
+    fullname: req.body.fullname,
+    role: 'admin' 
+  });
+
   const salt = await bcrypt.genSalt(10);
   admin.password = await bcrypt.hash(admin.password, salt);
 
   await admin.save();
+
   const token = admin.generateAuthToken();
-  res.header('x-auth-token', token).send(_.pick(admin, ['_id', 'email',"fullname"]));
+  res.header('x-auth-token', token).send(_.pick(admin, ['_id', 'email', 'fullname']));
 });
 
-router.get('/', async (req, res) => {
+
+router.get('/',adminAuth, async (req, res) => {
   try {
     const admins = await Admin.find().sort('email');
     res.send(admins);
@@ -62,7 +71,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id',adminAuth, async (req, res) => {
   try {
     const admin = await Admin.findByIdAndRemove(req.params.id);
     if (!admin) return res.status(404).send('Admin not found.');
