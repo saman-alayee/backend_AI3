@@ -61,13 +61,13 @@ router.get("/users", auth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    // Initialize the filter with userId
     const filter = { createdBy: userId };
 
     // Filter by date (single day)
     if (req.query.date) {
       const date = new Date(req.query.date);
 
-      // Validate date
       if (isNaN(date.getTime())) {
         return res.status(400).send("Invalid date format. Use ISO 8601 format.");
       }
@@ -96,6 +96,21 @@ router.get("/users", auth, async (req, res) => {
       filter.company = req.query.company;
     }
 
+    // Filter by ticketNumber
+    if (req.query.ticketNumber) {
+      filter.ticketNumber = req.query.ticketNumber;
+    }
+
+    // Filter by search (applies to request title and request content)
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, 'i'); // Case-insensitive search
+
+      filter.$or = [
+        { requestTitle: searchRegex },
+        { ticketNumber: searchRegex }
+      ];
+    }
+
     // Fetch tickets with filter, sort, skip, and limit
     const tickets = await Ticket.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
@@ -112,7 +127,6 @@ router.get("/users", auth, async (req, res) => {
     res.status(500).send("An error occurred while retrieving the tickets.");
   }
 });
-
 
 
 // single ticket of user 
@@ -167,17 +181,67 @@ router.get("/myTickets", adminAuth, async (req, res) => {
 // all tickets by made user
 router.get("/", adminAuth, async (req, res) => {
   try {
-    // Parse query parameters
     const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
     const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page if not provided
     const skip = (page - 1) * limit;
 
-    const tickets = await Ticket.find()
-    .sort({ createdAt: -1 }) // Sort by newest date first
-    .skip(skip)
-    .limit(limit);
+    // Initialize the filter object
+    const filter = {};
 
-    const totalTickets = await Ticket.countDocuments();
+    // Filter by date (single day)
+    if (req.query.date) {
+      const date = new Date(req.query.date);
+
+      if (isNaN(date.getTime())) {
+        return res.status(400).send("Invalid date format. Use ISO 8601 format.");
+      }
+
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+      filter.createdAt = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
+
+    // Filter by status
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    // Filter by problemType
+    if (req.query.problemType) {
+      filter.problemType = req.query.problemType;
+    }
+
+    // Filter by company
+    if (req.query.company) {
+      filter.company = req.query.company;
+    }
+
+    // Filter by ticketNumber
+    if (req.query.ticketNumber) {
+      filter.ticketNumber = req.query.ticketNumber;
+    }
+
+    // Filter by search (applies to request title and request content)
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, 'i'); // Case-insensitive search
+
+      filter.$or = [
+        { requestTitle: searchRegex },
+        { ticketNumber: searchRegex }
+      ];
+    }
+
+    // Fetch tickets with applied filters, sorting, and pagination
+    const tickets = await Ticket.find(filter)
+      .sort({ createdAt: -1 }) // Sort by newest date first
+      .skip(skip)
+      .limit(limit);
+
+    const totalTickets = await Ticket.countDocuments(filter);
 
     const totalPages = Math.ceil(totalTickets / limit);
 
@@ -192,6 +256,7 @@ router.get("/", adminAuth, async (req, res) => {
     res.status(500).send("An error occurred while fetching tickets.");
   }
 });
+
 
 // get single 
 router.get("/:id", adminAuth, async (req, res) => {
@@ -258,7 +323,6 @@ router.delete("/:id", adminAuth, async (req, res) => {
   }
 });
 
-
 router.put("/assign", adminAuth, async (req, res) => {
   const { ticketId, email } = req.body;
 
@@ -279,7 +343,7 @@ router.put("/assign", adminAuth, async (req, res) => {
     if (!ticket) {
       return res.status(404).send("Ticket not found");
     }
-    if (ticket.assignedTo === "no one") {
+    if (ticket.assignedTo !== "no one") {
       return res
         .status(400)
         .send("This ticket has already been assigned to another admin.");
