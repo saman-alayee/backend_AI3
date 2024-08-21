@@ -7,6 +7,8 @@ const demoAdmin = require("../routes/admin");
 const demoTicket = require("../routes/tickets");
 const demoMail = require("../routes/forgetPassword");
 const demoChat = require("../routes/chat")
+const demoMom = require("../routes/mom")
+
 const swagger = require('../swagger');
 
 module.exports = function (app) {
@@ -19,5 +21,7 @@ module.exports = function (app) {
   app.use("/api/tickets", demoTicket);
   app.use("/api/forgetPassword", demoMail);
   app.use("/api/chat", demoChat);
+  app.use("/api/mom", demoMom);
+
   app.use('/api-docs', swagger.serveSwaggerUI, swagger.setupSwaggerUI);
 };
