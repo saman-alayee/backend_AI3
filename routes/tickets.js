@@ -188,22 +188,21 @@ router.get("/", adminAuth, async (req, res) => {
     const filter = {};
 
     // Filter by date (single day)
- // Filter by date range (startDate and endDate)
-if (req.query.startDate || req.query.endDate) {
-  const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
-  const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
+    if (req.query.date) {
+      const date = new Date(req.query.date);
 
-  // Validate date formats
-  if ((startDate && isNaN(startDate.getTime())) || (endDate && isNaN(endDate.getTime()))) {
-    return res.status(400).send("Invalid date format. Use ISO 8601 format.");
-  }
+      if (isNaN(date.getTime())) {
+        return res.status(400).send("Invalid date format. Use ISO 8601 format.");
+      }
 
-  // Set up the date filter
-  filter.createdAt = {};
-  if (startDate) filter.createdAt.$gte = startDate;
-  if (endDate) filter.createdAt.$lte = new Date(endDate.setHours(23, 59, 59, 999));
-}
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
 
+      filter.createdAt = {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      };
+    }
 
     // Filter by status
     if (req.query.status) {
