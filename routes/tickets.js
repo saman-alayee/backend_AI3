@@ -107,7 +107,8 @@ router.get("/users", auth, async (req, res) => {
 
       filter.$or = [
         { requestTitle: searchRegex },
-        { ticketNumber: searchRegex }
+        { ticketNumber: searchRegex },
+        { company: searchRegex }
       ];
     }
 
@@ -230,7 +231,8 @@ router.get("/", adminAuth, async (req, res) => {
 
       filter.$or = [
         { requestTitle: searchRegex },
-        { ticketNumber: searchRegex }
+        { ticketNumber: searchRegex },
+        { company: searchRegex }
       ];
     }
 
