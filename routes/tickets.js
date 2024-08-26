@@ -161,13 +161,19 @@ router.get("/myTickets", adminAuth, async (req, res) => {
     const filter = { assignedTo: adminId };
 
     // Date range filter (startDate and endDate)
-    if (req.query.startDate || req.query.endDate) {
-      const startDate = req.query.startDate ? new Date(req.query.startDate).setHours(0, 0, 0, 0) : new Date("1970-01-01");
-      const endDate = req.query.endDate ? new Date(req.query.endDate).setHours(23, 59, 59, 999) : new Date();
+    if (req.query.date) {
+      const date = new Date(req.query.date);
+
+      if (isNaN(date.getTime())) {
+        return res.status(400).send("Invalid date format. Use ISO 8601 format.");
+      }
+
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
 
       filter.createdAt = {
-        $gte: startDate,
-        $lte: endDate,
+        $gte: startOfDay,
+        $lte: endOfDay,
       };
     }
 
@@ -201,15 +207,12 @@ router.get("/myTickets", adminAuth, async (req, res) => {
       ];
     }
 
-    // Fetch tickets with applied filters, sorting, and pagination
     const tickets = await Ticket.find(filter)
       .sort({ createdAt: -1 })  // Sort by newest date first
       .skip(skip)  
       .limit(limit);  
 
-    if (tickets.length === 0) {
-      return res.status(404).send("No tickets assigned to you.");
-    }
+
 
     const totalTickets = await Ticket.countDocuments(filter);
 
