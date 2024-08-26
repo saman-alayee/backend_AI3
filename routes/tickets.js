@@ -5,7 +5,6 @@ const { Admin } = require("../models/admin");
 const auth = require("../middleware/auth");
 const adminAuth = require("../middleware/adminAuth");
 const path = require("path");
-const ExcelJS = require("exceljs");
 const fs = require("fs");
 
 
@@ -397,9 +396,8 @@ router.put("/assign", adminAuth, async (req, res) => {
         .status(400)
         .send("قبلا گردن گرفتن ");
     }
-
     // Assign the ticket to the admin if not already assigned
-    ticket.assignedTo = admin._id;
+    ticket.assignedTo = admin.email;
     ticket.status = "در حال بررسی"
     await ticket.save();
 
@@ -408,6 +406,7 @@ router.put("/assign", adminAuth, async (req, res) => {
     res.status(500).send("An error occurred while assigning the ticket.");
   }
 });
+
 // Route to change the status of a ticket to "finished" and save endDate
 router.put("/:id/finish", adminAuth, async (req, res) => {
   try {
