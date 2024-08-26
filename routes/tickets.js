@@ -155,17 +155,63 @@ router.get("/myTickets", adminAuth, async (req, res) => {
     const adminId = req.adminId.toString();
     const page = parseInt(req.query.page) || 1;  
     const limit = parseInt(req.query.limit) || 10;  
+    const skip = (page - 1) * limit;
 
-    const tickets = await Ticket.find({ assignedTo: adminId })
-      .sort({ createdAt: -1 })  
-      .skip((page - 1) * limit)  
+    // Initialize the filter object
+    const filter = { assignedTo: adminId };
+
+    // Date range filter (startDate and endDate)
+    if (req.query.startDate || req.query.endDate) {
+      const startDate = req.query.startDate ? new Date(req.query.startDate).setHours(0, 0, 0, 0) : new Date("1970-01-01");
+      const endDate = req.query.endDate ? new Date(req.query.endDate).setHours(23, 59, 59, 999) : new Date();
+
+      filter.createdAt = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+    }
+
+    // Filter by status
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    // Filter by problemType
+    if (req.query.problemType) {
+      filter.problemType = req.query.problemType;
+    }
+
+    // Filter by company
+    if (req.query.company) {
+      filter.company = req.query.company;
+    }
+
+    // Filter by ticketNumber
+    if (req.query.ticketNumber) {
+      filter.ticketNumber = req.query.ticketNumber;
+    }
+
+    // Filter by search (applies to request title and request content)
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, 'i'); // Case-insensitive search
+      filter.$or = [
+        { requestTitle: searchRegex },
+        { ticketNumber: searchRegex },
+        { company: searchRegex }
+      ];
+    }
+
+    // Fetch tickets with applied filters, sorting, and pagination
+    const tickets = await Ticket.find(filter)
+      .sort({ createdAt: -1 })  // Sort by newest date first
+      .skip(skip)  
       .limit(limit);  
 
     if (tickets.length === 0) {
       return res.status(404).send("No tickets assigned to you.");
     }
 
-    const totalTickets = await Ticket.countDocuments({ assignedTo: adminId });
+    const totalTickets = await Ticket.countDocuments(filter);
 
     res.status(200).json({
       tickets,
@@ -178,6 +224,7 @@ router.get("/myTickets", adminAuth, async (req, res) => {
     res.status(500).send("An error occurred while retrieving the tickets.");
   }
 });
+
 // all tickets by made user
 router.get("/", adminAuth, async (req, res) => {
   try {
