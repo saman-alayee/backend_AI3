@@ -33,7 +33,7 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
     requestTitle: req.body.requestTitle,
     attachmentFiles: attachmentFileUrls, // Use array of URLs
     assignedTo: 'no one',
-    status:'در حال بررسی',
+    status:'ثبت شده',
     createdBy: req.userId,
   };
 
