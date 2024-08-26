@@ -343,12 +343,12 @@ router.put("/assign", adminAuth, async (req, res) => {
     if (ticket.assignedTo !== "no one") {
       return res
         .status(400)
-        .send("This ticket has already been assigned to another admin.");
+        .send("قبلا گردن گرفتن ");
     }
 
     // Assign the ticket to the admin if not already assigned
     ticket.assignedTo = admin._id;
-    ticket.status = "در حال انجام"
+    ticket.status = "در حال بررسی"
     await ticket.save();
 
     res.status(200).json(ticket);
@@ -367,7 +367,7 @@ router.put("/:id/finish", adminAuth, async (req, res) => {
       return res.status(404).send("Ticket not found");
     }
 
-    ticket.status = "تمام شده";
+    ticket.status = "حل شده";
     ticket.endDate = new Date(); 
 
     await ticket.save();
@@ -388,15 +388,13 @@ router.put("/:id", adminAuth, async (req, res) => {
       return res.status(404).send("Ticket not found");
     }
 
-    const { status, endDate } = req.body;
+    const { status } = req.body;
 
     if (!status) {
       return res.status(400).send("Status is required.");
     }
 
     ticket.status = status;
-    ticket.endDate = new Date(endDate);
-
     await ticket.save();
 
     res.status(200).json(ticket);
