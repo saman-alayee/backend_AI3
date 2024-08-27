@@ -151,7 +151,7 @@ router.get('/users/:id',auth,async (req,res) => {
 // admins assign tickets 
 router.get("/myTickets", adminAuth, async (req, res) => {
   try {
-    const adminId = req.adminId.toString();
+    const adminId = req.body.email;
     const page = parseInt(req.query.page) || 1;  
     const limit = parseInt(req.query.limit) || 10;  
     const skip = (page - 1) * limit;
