@@ -77,6 +77,10 @@ const ticketSchema = new mongoose.Schema(
       type: String,
       default: "no one",
     },
+    assignedToName: {
+      type: String,
+      default: "no one",
+    },
     createdBy: {
       type: String,
       default: "",
@@ -118,6 +122,7 @@ function validateTicket(ticket) {
     requestTitle: Joi.string().max(255).required(),
     attachmentFiles: Joi.array().items(Joi.string().max(500)).optional(),
     assignedTo: Joi.string().optional(),
+    assignedToName: Joi.string().optional(),
     createdBy: Joi.string().optional(),
     status: Joi.string().required(),
     endDate: Joi.date().iso().optional(),

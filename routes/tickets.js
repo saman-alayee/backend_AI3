@@ -32,6 +32,7 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
     requestTitle: req.body.requestTitle,
     attachmentFiles: attachmentFileUrls, // Use array of URLs
     assignedTo: 'no one',
+    assignedToName: 'no one',
     status:'ثبت شده',
     createdBy: req.userId,
   };
@@ -151,7 +152,7 @@ router.get('/users/:id',auth,async (req,res) => {
 // admins assign tickets 
 router.get("/myTickets", adminAuth, async (req, res) => {
   try {
-    const adminId = req.body.email;
+    const adminId = req.adminId.toString();
     const page = parseInt(req.query.page) || 1;  
     const limit = parseInt(req.query.limit) || 10;  
     const skip = (page - 1) * limit;
@@ -396,8 +397,10 @@ router.put("/assign", adminAuth, async (req, res) => {
         .status(400)
         .send("قبلا گردن گرفتن ");
     }
+    console.log(admin)
     // Assign the ticket to the admin if not already assigned
-    ticket.assignedTo = admin.email;
+    ticket.assignedTo = admin._id.toString();
+    ticket.assignedToName = admin.fullname
     ticket.status = "در حال بررسی"
     await ticket.save();
 
