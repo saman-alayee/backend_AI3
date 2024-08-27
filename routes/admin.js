@@ -4,6 +4,7 @@ const { Admin, validateAdmin } = require('../models/admin');
 const _ = require('lodash');
 const bcrypt = require('bcrypt');
 const adminAuth = require('../middleware/adminAuth');
+const superAdmin = require("../middleware/superAdmin");
 
 
 router.get('/verify', adminAuth, async (req, res) => {
@@ -11,7 +12,7 @@ router.get('/verify', adminAuth, async (req, res) => {
   res.send(admin);
 });
 
-router.post('/', adminAuth, async (req, res) => {
+router.post('/', superAdmin, async (req, res) => {
   const { error } = validateAdmin(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
