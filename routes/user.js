@@ -87,8 +87,23 @@ router.post('/otp', async (req, res) => {
 
 router.get("/", superAdmin, async (req, res) => {
   try {
-    const users = await User.find().sort("email");
-    res.send(users);
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
+    const skip = (page - 1) * limit;
+
+    const users = await User.find()
+      .sort("email")  
+      .skip(skip)     
+      .limit(limit);  
+
+    const totalUsers = await User.countDocuments();
+
+    res.status(200).json({
+      totalUsers,
+      totalPages: Math.ceil(totalUsers / limit),
+      currentPage: page,
+      users,
+    });
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).send("Internal Server Error");
