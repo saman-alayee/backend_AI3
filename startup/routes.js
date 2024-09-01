@@ -13,15 +13,15 @@ const swagger = require('../swagger');
 
 module.exports = function (app) {
   app.use(express.json());
-  app.use("/api", indexRouter);
-  app.use("/api/auth", demoAuth);
-  app.use("/api/authAdmin", demoAuthAdmin);
-  app.use("/api/users", demoUser);
-  app.use("/api/admin", demoAdmin);
-  app.use("/api/tickets", demoTicket);
-  app.use("/api/forgetPassword", demoMail);
-  app.use("/api/chat", demoChat);
-  app.use("/api/mom", demoMom);
+  app.use("/", indexRouter);
+  app.use("/auth", demoAuth);
+  app.use("/authAdmin", demoAuthAdmin);
+  app.use("/users", demoUser);
+  app.use("/admin", demoAdmin);
+  app.use("/tickets", demoTicket);
+  app.use("/forgetPassword", demoMail);
+  app.use("/chat", demoChat);
+  app.use("/mom", demoMom);
 
-  app.use('/api-docs', swagger.serveSwaggerUI, swagger.setupSwaggerUI);
+  app.use('-docs', swagger.serveSwaggerUI, swagger.setupSwaggerUI);
 };
