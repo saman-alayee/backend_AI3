@@ -1,7 +1,8 @@
 {
     "mongo_URI": "mongodb://127.0.0.1:27017/requests",
     "jwtPrivateKey": "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-    "baseUrl" : "http://localhost:3000"
+    "baseUrl" : "http://localhost:3000",
+    "PORT":"3000"
 
 
 }

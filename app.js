@@ -3,10 +3,8 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var nodemailer = require('nodemailer');
 var cors = require('cors');
 var config = require('config');
-const ExcelJS = require('exceljs');
 const swagger = require('./swagger');
 
 var app = express();
@@ -32,7 +30,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 // Define base URL
-const baseUrl = 'http://localhost:3000';
+const baseUrl = config.get("baseUrl");
+
 
 // Middleware to log client IP
 app.use((req, res, next) => {
