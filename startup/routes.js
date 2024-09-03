@@ -23,5 +23,5 @@ module.exports = function (app) {
   app.use("/chat", demoChat);
   app.use("/mom", demoMom);
 
-  app.use('-docs', swagger.serveSwaggerUI, swagger.setupSwaggerUI);
+  app.use('api-docs', swagger.serveSwaggerUI, swagger.setupSwaggerUI);
 };
