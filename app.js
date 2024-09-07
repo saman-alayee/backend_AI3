@@ -10,7 +10,15 @@ const swagger = require('./swagger');
 var app = express();
 
 // Middleware setup
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: '*',  // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow all HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers
+};
+
+// Middleware setup
+app.use(cors(corsOptions));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
