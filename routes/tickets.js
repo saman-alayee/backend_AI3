@@ -309,8 +309,8 @@ router.get("/", adminAuth, async (req, res) => {
   }
 });
 
-
-router.get("/export/excel", async (req, res) => {
+// excel export
+router.get("/export/excel",adminAuth, async (req, res) => {
   try {
     // Fetch all tickets
     const tickets = await Ticket.find().sort({ createdAt: -1 });
