@@ -473,7 +473,7 @@ router.put("/assign", adminAuth, async (req, res) => {
     if (ticket.assignedTo !== "no one") {
       return res
         .status(400)
-        .send("این تیکت  به شخصی دیگر سپرده شده ایت ");
+        .send("این تیکت  به شخصی دیگر سپرده شده است ");
     }
     console.log(admin)
     // Assign the ticket to the admin if not already assigned
