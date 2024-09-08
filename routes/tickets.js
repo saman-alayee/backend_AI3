@@ -6,6 +6,7 @@ const auth = require("../middleware/auth");
 const adminAuth = require("../middleware/adminAuth");
 const path = require("path");
 const fs = require("fs");
+const ExcelJS = require('exceljs');
 
 
 
@@ -307,6 +308,83 @@ router.get("/", adminAuth, async (req, res) => {
     res.status(500).send("An error occurred while fetching tickets.");
   }
 });
+
+
+router.get("/export/excel", async (req, res) => {
+  try {
+    // Fetch all tickets
+    const tickets = await Ticket.find().sort({ createdAt: -1 });
+
+    // Create a new Excel workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Tickets');
+
+    // Define the columns
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 30 },
+      { header: 'Full Name', key: 'fullName', width: 25 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Company', key: 'company', width: 30 },
+      { header: 'License Code', key: 'licenseCode', width: 20 },
+      { header: 'Problem Type', key: 'problemType', width: 30 },
+      { header: 'Error Time', key: 'errorTime', width: 20 },
+      { header: 'Request', key: 'request', width: 30 },
+      { header: 'Request Title', key: 'requestTitle', width: 30 },
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Attachment Files', key: 'attachmentFiles', width: 40 },
+      { header: 'Assigned To', key: 'assignedTo', width: 20 },
+      { header: 'Assigned To Name', key: 'assignedToName', width: 25 },
+      { header: 'Created By', key: 'createdBy', width: 30 },
+      { header: 'End Date', key: 'endDate', width: 20 },
+      { header: 'Ticket Number', key: 'ticketNumber', width: 20 },
+      { header: 'Created At', key: 'createdAt', width: 25, style: { numFmt: 'yyyy-mm-dd hh:mm:ss' } },
+      { header: 'Updated At', key: 'updatedAt', width: 25, style: { numFmt: 'yyyy-mm-dd hh:mm:ss' } },
+      { header: 'Time Taken', key: 'timeTaken', width: 20 },
+    ];
+
+    // Add rows to the worksheet
+    tickets.forEach(ticket => {
+      worksheet.addRow({
+        id: ticket._id.toString(),
+        fullName: ticket.fullName,
+        email: ticket.email,
+        company: ticket.company,
+        licenseCode: ticket.licenseCode,
+        problemType: ticket.problemType,
+        errorTime: ticket.errorTime,
+        request: ticket.request,
+        requestTitle: ticket.requestTitle,
+        status: ticket.status,
+        attachmentFiles: ticket.attachmentFiles.join(', '), // Concatenate all attachments into a single cell
+        assignedTo: ticket.assignedTo,
+        assignedToName: ticket.assignedToName,
+        createdBy: ticket.createdBy,
+        endDate: ticket.endDate ? ticket.endDate.toISOString() : null,
+        ticketNumber: ticket.ticketNumber,
+        createdAt: ticket.createdAt.toISOString(),
+        updatedAt: ticket.updatedAt.toISOString(),
+        timeTaken: ticket.timeTaken,
+      });
+    });
+
+    // Set the response headers for Excel download
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="tickets.xlsx"'
+    );
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+
+    // Write the workbook to the response
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    res.status(500).send("An error occurred while exporting tickets.");
+  }
+});
+
 // get single 
 router.get("/:id", adminAuth, async (req, res) => {
   try {
@@ -395,7 +473,7 @@ router.put("/assign", adminAuth, async (req, res) => {
     if (ticket.assignedTo !== "no one") {
       return res
         .status(400)
-        .send("قبلا گردن گرفتن ");
+        .send("این تیکت  به شخصی دیگر سپرده شده ایت ");
     }
     console.log(admin)
     // Assign the ticket to the admin if not already assigned
