@@ -24,7 +24,8 @@ async function createSuperAdmin(email, password) {
     admin = new Admin({
       email,
       password: hashedPassword,
-      fullname,
+      name,
+      lastname,
       role: 'superadmin',
     });
 
