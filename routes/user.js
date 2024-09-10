@@ -44,7 +44,7 @@ router.post("/", async (req, res) => {
   }
 
   // Create a new user if not existing
-  user = new User(_.pick(req.body, ["email", "password", "fullname"]));
+  user = new User(_.pick(req.body, ["email", "password", "fullname","licenseCode","company"]));
   const salt = await bcrypt.genSalt(10);
   user.password = await bcrypt.hash(user.password, salt);
 
@@ -81,7 +81,7 @@ router.post('/otp', async (req, res) => {
   await user.save();
 
   const token = user.generateAuthToken();
-  res.header('x-auth-token', token).send(_.pick(user, ['_id', 'email', 'fullname']));
+  res.header('x-auth-token', token).send(_.pick(user, ['_id', 'email', 'fullname','licenseCode','company']));
 });
 
 
