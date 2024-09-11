@@ -20,44 +20,53 @@ router.get("/verify", auth, async (req, res) => {
 
 // Create a new user and send OTP
 router.post("/", async (req, res) => {
-  const { error } = validateUser(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  try {
+    // Validate user input
+    const { error } = validateUser(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
 
-  let user = await User.findOne({ email: req.body.email });
-  if (user) {
-    if (!user.isVerified) {
-      // User exists but is not verified, resend OTP
-      await sendOtp(user);
-      return res.json({
-        message: "Account exists but is not verified. OTP resent.",
-        isVerified: user.isVerified,
-        email:user.email
-      });
-    } else {
-      // User already registered and verified
-      return res.json({
-        message:"User already registered. Please log in.",
-        isVerified:user.isVerified,
-        email:user.email
-      });
+    // Check if the user already exists
+    let user = await User.findOne({ email: req.body.email });
+    if (user) {
+      if (!user.isVerified) {
+        // User exists but is not verified, resend OTP
+        await sendOtp(user);
+        return res.json({
+          message: "Account exists but is not verified. OTP resent.",
+          isVerified: user.isVerified,
+          email: user.email
+        });
+      } else {
+        // User already registered and verified
+        return res.json({
+          message: "User already registered. Please log in.",
+          isVerified: user.isVerified,
+          email: user.email
+        });
+      }
     }
+
+    // Create a new user if not existing
+    user = new User(_.pick(req.body, ["email", "password", "fullname", "licenseCode", "company"]));
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+
+    // Send OTP and then save the user
+    await sendOtp(user);
+    await user.save();
+
+    res.json({
+      message: "User registered. Please verify your email with the OTP sent to you.",
+      isVerified: user.isVerified,
+      email: user.email
+    });
+  } catch (err) {
+    // Handle any errors that occurred during the request
+    console.error("Error during user registration:", err.message);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
   }
-
-  // Create a new user if not existing
-  user = new User(_.pick(req.body, ["email", "password", "fullname","licenseCode","company"]));
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(user.password, salt);
-
-  // Send OTP and then save the user
-  await sendOtp(user);
-  await user.save();
-
-  res.json({
-    message:"User registered. Please verify your email with the OTP sent to you.",
-    isVerified:user.isVerified,
-    email:user.email
-  });
 });
+
 
 
 
