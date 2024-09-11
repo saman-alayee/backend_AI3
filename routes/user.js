@@ -5,13 +5,9 @@ const _ = require("lodash");
 const bcrypt = require("bcrypt");
 const superAdmin = require("../middleware/superAdmin");
 const auth = require("../middleware/auth");
-const sendOtp = require("../utils/sendOtp"); 
-const { resolve } = require("path/win32");
-
-
-
-
-
+const sendOtp = require("../utils/sendOtp");
+const config = require("config");
+const jwt = require("jsonwebtoken");
 
 router.get("/verify", auth, async (req, res) => {
   const user = await User.findById(req.user._id).select("-password");
@@ -30,7 +26,8 @@ router.post("/", async (req, res) => {
       // User exists but is not verified, resend OTP
       await sendOtp(existingUser);
       return res.json({
-        message: "حساب شما موجود می باشد اما ایمیل تان تایید نشده است . رمز یک بار مصرف برای شما ارسال شد.",
+        message:
+          "حساب شما موجود می باشد اما ایمیل تان تایید نشده است . رمز یک بار مصرف برای شما ارسال شد.",
         isVerified: existingUser.isVerified,
         email: existingUser.email,
       });
@@ -45,14 +42,24 @@ router.post("/", async (req, res) => {
   }
 
   // Check if the licenseCode is used by another email
-  const licenseCodeInUse = await User.findOne({ licenseCode: req.body.licenseCode });
+  const licenseCodeInUse = await User.findOne({
+    licenseCode: req.body.licenseCode,
+  });
   if (licenseCodeInUse && licenseCodeInUse.email !== req.body.email) {
     return res.status(400).json({
-      message: "کد لایسنس در حال حاضر توسط ایمیل دیگری استفاده شده است. لطفاً از یک کد لایسنس منحصر به فرد استفاده کنید."
+      message:
+        "کد لایسنس در حال حاضر توسط ایمیل دیگری استفاده شده است. لطفاً از یک کد لایسنس منحصر به فرد استفاده کنید.",
     });
-    
   }
-  const user = new User(_.pick(req.body, ["email", "password", "fullname", "licenseCode", "company"]));
+  const user = new User(
+    _.pick(req.body, [
+      "email",
+      "password",
+      "fullname",
+      "licenseCode",
+      "company",
+    ])
+  );
   // Encrypt the password before saving
   const salt = await bcrypt.genSalt(10);
   user.password = await bcrypt.hash(user.password, salt);
@@ -63,7 +70,8 @@ router.post("/", async (req, res) => {
     await user.save();
 
     res.status(200).json({
-      message: "User registered successfully. Please verify your email with the OTP sent to you.",
+      message:
+        "User registered successfully. Please verify your email with the OTP sent to you.",
       isVerified: user.isVerified,
       email: user.email,
     });
@@ -73,19 +81,17 @@ router.post("/", async (req, res) => {
   }
 });
 
-
-
 // Verify OTP and activate the user
-router.post('/otp', async (req, res) => {
+router.post("/otp", async (req, res) => {
   const { error } = validateOtp(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const user = await User.findOne({ email: req.body.email, otp: req.body.otp });
-  if (!user) return res.status(400).send('Invalid OTP or email.');
+  if (!user) return res.status(400).send("Invalid OTP or email.");
 
   // Check if OTP is expired
   if (Date.now() > user.otpExpiration) {
-    return res.status(400).send('OTP has expired.');
+    return res.status(400).send("OTP has expired.");
   }
 
   // Mark the user as verified and clear OTP fields
@@ -95,9 +101,10 @@ router.post('/otp', async (req, res) => {
   await user.save();
 
   const token = user.generateAuthToken();
-  res.header('x-auth-token', token).send(_.pick(user, ['_id', 'email', 'fullname','licenseCode','company']));
+  res
+    .header("x-auth-token", token)
+    .send(_.pick(user, ["_id", "email", "fullname", "licenseCode", "company"]));
 });
-
 
 router.get("/", superAdmin, async (req, res) => {
   try {
@@ -105,10 +112,7 @@ router.get("/", superAdmin, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
     const skip = (page - 1) * limit;
 
-    const users = await User.find()
-      .sort("email")  
-      .skip(skip)     
-      .limit(limit);  
+    const users = await User.find().sort("email").skip(skip).limit(limit);
 
     const totalUsers = await User.countDocuments();
 
@@ -124,19 +128,36 @@ router.get("/", superAdmin, async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/", async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).send("User not found.");
+    const token = req.headers["authorization"];
+    if (!token) return res.status(401).send("Access denied. No token provided.");
 
-    if (req.body.email) user.email = req.body.email;
-    await user.save();
-    res.send(user);
+    let userId;
+    try {
+      const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
+      userId = decoded._id;
+    } catch (ex) {
+      return res.status(400).send("Invalid token.");
+    }
+
+    const { password } = req.body;
+    if (!password) return res.status(400).send("New password is required.");
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Update the password field using updateOne()
+    await User.updateOne({ _id: userId }, { password: hashedPassword });
+
+    res.send("رمز عبور با موفقیت بروز رسانی شد.");
   } catch (error) {
-    console.error("Error updating user:", error);
+    console.error("Error updating password:", error);
     res.status(500).send("Internal Server Error");
   }
 });
+
 
 router.get("/:id", async (req, res) => {
   try {
