@@ -17,7 +17,7 @@ router.post('/', superAdmin, async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let admin = await Admin.findOne({ email: req.body.email });
-  if (admin) return res.status(400).send('Admin is already registered.');
+  if (admin) return res.status(400).send('ادمین مورد نظر موجود می باشد.');
 
   // Include the role when creating the new admin
   admin = new Admin({
