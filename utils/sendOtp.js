@@ -27,8 +27,15 @@ async function sendOtp(user) {
     await transporter.sendMail({
       from: '"MAYND" <crm@maynd.ir>', // Ensure "From" address is correct
       to: user.email,
-      subject: "Your OTP Code",
-      text: `Your OTP code is ${otp}`,
+      subject: `سلام ${user.fullname} عزیز`,
+      html: `
+        <div style="direction: rtl; text-align: right;">
+          <p>درخواست شما برای ورود به داشبورد دریافت شد. لطفاً از کد تایید زیر برای ادامه فرآیند ورود استفاده کنید:</p>
+          <p><strong>کد تایید شما: ${otp}</strong></p>
+          <p>این کد فقط به مدت 5 دقیقه معتبر است. اگر شما این درخواست را انجام نداده‌اید، لطفاً هر چه سریع‌تر با پشتیبانی ما تماس بگیرید.</p>
+          <p>با تشکر،<br/>تیم پشتیبانی مایند</p>
+        </div>
+      `,
     });
     await user.save(); // Save OTP and expiration time to the database after email is sent
   } catch (error) {

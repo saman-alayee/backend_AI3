@@ -20,53 +20,58 @@ router.get("/verify", auth, async (req, res) => {
 
 // Create a new user and send OTP
 router.post("/", async (req, res) => {
-  try {
-    // Validate user input
-    const { error } = validateUser(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+  const { error } = validateUser(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
 
-    // Check if the user already exists
-    let user = await User.findOne({ email: req.body.email });
-    if (user) {
-      if (!user.isVerified) {
-        // User exists but is not verified, resend OTP
-        await sendOtp(user);
-        return res.json({
-          message: "Account exists but is not verified. OTP resent.",
-          isVerified: user.isVerified,
-          email: user.email
-        });
-      } else {
-        // User already registered and verified
-        return res.json({
-          message: "User already registered. Please log in.",
-          isVerified: user.isVerified,
-          email: user.email
-        });
-      }
+  // Check if the email already exists
+  let existingUser = await User.findOne({ email: req.body.email });
+  if (existingUser) {
+    if (!existingUser.isVerified) {
+      // User exists but is not verified, resend OTP
+      await sendOtp(existingUser);
+      return res.json({
+        message: "حساب شما موجود می باشد اما ایمیل تان تایید نشده است . رمز یک بار مصرف برای شما ارسال شد.",
+        isVerified: existingUser.isVerified,
+        email: existingUser.email,
+      });
+    } else {
+      // User already registered and verified
+      return res.json({
+        message: "حساب شما موجود می باشد لطفا وارد شوید.",
+        isVerified: existingUser.isVerified,
+        email: existingUser.email,
+      });
     }
+  }
 
-    // Create a new user if not existing
-    user = new User(_.pick(req.body, ["email", "password", "fullname", "licenseCode", "company"]));
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
+  // Check if the licenseCode is used by another email
+  const licenseCodeInUse = await User.findOne({ licenseCode: req.body.licenseCode });
+  if (licenseCodeInUse && licenseCodeInUse.email !== req.body.email) {
+    return res.status(400).json({
+      message: "کد لایسنس در حال حاضر توسط ایمیل دیگری استفاده شده است. لطفاً از یک کد لایسنس منحصر به فرد استفاده کنید."
+    });
+    
+  }
+  const user = new User(_.pick(req.body, ["email", "password", "fullname", "licenseCode", "company"]));
+  // Encrypt the password before saving
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(user.password, salt);
 
+  try {
     // Send OTP and then save the user
     await sendOtp(user);
     await user.save();
 
-    res.json({
-      message: "User registered. Please verify your email with the OTP sent to you.",
+    res.status(200).json({
+      message: "User registered successfully. Please verify your email with the OTP sent to you.",
       isVerified: user.isVerified,
-      email: user.email
+      email: user.email,
     });
-  } catch (err) {
-    // Handle any errors that occurred during the request
-    console.error("Error during user registration:", err.message);
-    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  } catch (ex) {
+    console.error("Error saving the user:", ex);
+    res.status(500).send("Internal server error.");
   }
 });
-
 
 
 

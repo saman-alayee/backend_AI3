@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       maxlength: 124,
+      unique: true, // Ensuring the licenseCode is unique
     },
     otp: {
       type: String,
@@ -69,6 +70,7 @@ function validateUser(user) {
   });
   return schema.validate(user);
 }
+
 function validateOtp(otpRequest) {
   const schema = Joi.object({
     email: Joi.string().email().required(),
