@@ -32,8 +32,8 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
     request: req.body.request,
     requestTitle: req.body.requestTitle,
     attachmentFiles: attachmentFileUrls, // Use array of URLs
-    assignedTo: 'no one',
-    assignedToName: 'no one',
+    assignedTo: 'هیچکس',
+    assignedToName: 'هیچکس',
     status:'ثبت شده',
     createdBy: req.userId,
   };
@@ -470,7 +470,7 @@ router.put("/assign", adminAuth, async (req, res) => {
     if (!ticket) {
       return res.status(404).send("Ticket not found");
     }
-    if (ticket.assignedTo !== "no one") {
+    if (ticket.assignedTo !== "هیچکس") {
       return res
         .status(400)
         .send(" ایشوو توسط کارشناس دیگری در حال بررسی است.");

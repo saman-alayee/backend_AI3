@@ -75,11 +75,11 @@ const ticketSchema = new mongoose.Schema(
     },
     assignedTo: {
       type: String,
-      default: "no one",
+      default: "هیچکس",
     },
     assignedToName: {
       type: String,
-      default: "no one",
+      default: "هیچکس",
     },
     createdBy: {
       type: String,
