@@ -38,12 +38,20 @@ router.post("/", async (req, res) => {
   const mailOptions = {
     from: "crm@maynd.ir",
     to: email,
-    subject: "Password Reset",
-    text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
-    Please click on the following link, or paste this into your browser to complete the process:\n\n
-    ${resetURL}\n\n
-    If you did not request this, please ignore this email and your password will remain unchanged.\n`,
+    subject: "درخواست تغییر رمز عبور شما",
+    html: `
+      <div dir="rtl" style="text-align: right; font-family: Arial, sans-serif;">
+        <p>سلام کاربر عزیز،</p>
+        <p>درخواست شما برای تغییر رمز عبور دریافت شد. لطفاً از لینک زیر جهت ادامه فرآیند تغییر رمز عبور استفاده کنید:</p>
+        <p><a href="${resetURL}">${resetURL}</a></p>
+        <p>این لینک فقط به مدت 5 دقیقه معتبر است. اگر این درخواست از سمت شما انجام نشده است، لطفاً هر چه سریع‌تر با پشتیبانی ما تماس بگیرید.</p>
+        <p>با تشکر،<br>
+        تیم پشتیبانی مایند</p>
+      </div>
+    `,
   };
+  
+  
 
   try {
     const info = await transporter.sendMail(mailOptions);
