@@ -33,7 +33,7 @@ router.post("/", async (req, res) => {
   if (!user) return res.status(400).send("User not found");
 
   const token = user.generateAuthToken();
-  const resetURL = `http://localhost:5173/reset-password/${token}`;
+  const resetURL = `http://itk.maynd.ir/reset-password/${token}`;
 
   const mailOptions = {
     from: "crm@maynd.ir",
