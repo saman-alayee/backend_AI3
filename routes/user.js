@@ -81,6 +81,39 @@ router.post("/", async (req, res) => {
   }
 });
 
+// resend otp 
+router.post("/resend-otp", async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) return res.status(400).send("ایمیل را لطفا وارد کنید .");
+
+  let user = await User.findOne({ email: email });
+  if (!user) return res.status(404).send("کاربر یافت نشد.");
+
+  if (user.isVerified) {
+    return res.status(400).json({
+      message: "اکانت شما تایید شده است . لطفا وارد شوید .",
+      isVerified: user.isVerified,
+      email: user.email,
+    });
+  }
+  try {
+    await sendOtp(user); 
+    user.otpExpiration = Date.now() + 15 * 60 * 1000; 
+    await user.save();
+    res.json({
+      message: "رمز یک بار مصرف برای شما ارسال شد.",
+      isVerified: user.isVerified,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("Error resending OTP:", error);
+    res.status(500).send("Internal server error.");
+  }
+});
+
+
+
 // Verify OTP and activate the user
 router.post("/otp", async (req, res) => {
   const { error } = validateOtp(req.body);
