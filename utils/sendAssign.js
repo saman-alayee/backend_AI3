@@ -16,12 +16,16 @@ async function sendAssign(user) {
     await transporter.sendMail({
       from: '"MAYND" <crm@maynd.ir>', // Ensure "From" address is correct
       to: user.email,
-      subject: `تیم پشتیبانی مایند - بررسی پاسخ`,
+      subject: `تیم پشتیبانی مایند - ایشوی شما با موفقیت ثبت شد`,
       html: `
         <div style="direction: rtl; text-align: right;">
           <p> ${user.fullName} عزیز</p>
-          <p> تیکت شما مورد بررسی هست .</p>
-        </div>
+          <p>از اینکه با ما در ارتباط هستید، متشکریم.</p>
+          <p>ایشو شما با شناسه ${user.ticketNumber} دریافت شده و در حال بررسی توسط کارشناسان ماست. تمام تلاش خود را خواهیم کرد تا در اسرع وقت آن را بررسی کرده و نتیجه را به اطلاع شما برسانیم.</p>
+          <p>در صورت نیاز به اطلاعات بیشتر، لطفاً با ما در تماس باشید.</p>
+        <p>با احترام،
+تیم پشتیبانی مایند</p>
+          </div>
       `,
     });
     await user.save(); // Save OTP and expiration time to the database after email is sent
