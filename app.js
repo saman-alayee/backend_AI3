@@ -1,17 +1,23 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var cors = require('cors');
-var config = require('config');
+const express = require('express');
+const morgan = require('morgan');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const config = require('config');
 const swagger = require('./swagger');
+const createError = require('http-errors');
 
-var app = express();
+const app = express();
 
 // Middleware setup
 app.use(cors());
-app.use(logger('dev'));
+
+// Custom logger format to include date and time
+morgan.token('date', function () {
+  return new Date().toISOString();
+});
+app.use(morgan(':method :url :status :response-time ms :date'));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -31,7 +37,6 @@ app.set('view engine', 'jade');
 
 // Define base URL
 const baseUrl = config.get("baseUrl");
-
 
 // Middleware to log client IP
 app.use((req, res, next) => {

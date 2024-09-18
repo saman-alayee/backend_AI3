@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {Chat} = require('../models/chat');
 const { Ticket } = require('../models/ticket');
+const sendNotification = require("../utils/sendNotification");
 
 // Get all chat messages for a specific ticket
 router.get('/:ticketId', async (req, res) => {
@@ -16,7 +17,7 @@ router.get('/:ticketId', async (req, res) => {
 
 // Add a new chat message to a specific ticket
 router.post('/:ticketId', async (req, res) => {
-    const { user, message,role } = req.body;  // Expecting user info and message in the request body
+    const { user, message,role } = req.body;  
 
     try {
         // Find the ticket by ID
@@ -27,6 +28,7 @@ router.post('/:ticketId', async (req, res) => {
         let newStatus;
         if (req.body.role === 'admin' || req.body.role === 'superadmin') {
             newStatus = "در انتظار پاسخ";
+            await sendNotification(ticket)
 
         } else if (req.body.role === 'user') {
 

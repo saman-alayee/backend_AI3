@@ -7,6 +7,8 @@ const adminAuth = require("../middleware/adminAuth");
 const path = require("path");
 const fs = require("fs");
 const ExcelJS = require('exceljs');
+const sendAssign = require("../utils/sendAssign");
+const sendFinish = require("../utils/sendFinish");
 
 
 
@@ -475,11 +477,10 @@ router.put("/assign", adminAuth, async (req, res) => {
         .status(400)
         .send(" ایشوو توسط کارشناس دیگری در حال بررسی است.");
     }
-    console.log(admin)
-    // Assign the ticket to the admin if not already assigned
     ticket.assignedTo = admin._id.toString();
     ticket.assignedToName = admin.fullname
     ticket.status = "در حال بررسی"
+    await sendAssign(ticket)
     await ticket.save();
 
     res.status(200).json(ticket);
@@ -501,6 +502,7 @@ router.put("/:id/finish", adminAuth, async (req, res) => {
 
     ticket.status = "حل شده";
     ticket.endDate = new Date(); 
+    await sendFinish(ticket)
 
     await ticket.save();
 
