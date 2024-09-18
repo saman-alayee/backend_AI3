@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const {Chat} = require('../models/chat');
+const { Chat, validateChat, upload } = require("../models/chat");  
 const { Ticket } = require('../models/ticket');
 const sendNotification = require("../utils/sendNotification");
-
-// Get all chat messages for a specific ticket
+const multer = require("multer"); 
 router.get('/:ticketId', async (req, res) => {
     try {
         const messages = await Chat.find({ ticketId: req.params.ticketId }).sort({ timestamp: 1 });
@@ -16,43 +15,52 @@ router.get('/:ticketId', async (req, res) => {
 });
 
 // Add a new chat message to a specific ticket
-router.post('/:ticketId', async (req, res) => {
-    const { user, message,role } = req.body;  
-
+router.post('/:ticketId', upload.array('images'), async (req, res) => {
+    const { user, message, role } = req.body;
+  
+    // Validate chat input
+    // const { error } = validateChat(req.body);
+    // if (error) return res.status(400).json({ message: error.details[0].message });
+  
+    // Handle file uploads
+    const uploadedFiles = req.files;
+    const attachmentFileUrls = uploadedFiles?.map(file => `${req.protocol}://${req.get('host')}/uploads/${file.filename}`) || [];
+  
     try {
-        // Find the ticket by ID
-        const ticket = await Ticket.findById(req.params.ticketId);
-        if (!ticket) return res.status(404).json({ message: 'Ticket not found.' });
-
-        // Determine the new status based on the user sending the message
-        let newStatus;
-        if (req.body.role === 'admin' || req.body.role === 'superadmin') {
-            newStatus = "در انتظار پاسخ";
-            await sendNotification(ticket)
-
-        } else if (req.body.role === 'user') {
-
-            newStatus ="در حال بررسی";
-        } else {
-            return res.status(400).json({ message: 'Invalid user role.' });
-        }
-
-        // Update the ticket's status in the database
-        ticket.status = newStatus;
-        ticket.updatedAt = new Date();  // Optionally update the 'updatedAt' timestamp
-        await ticket.save();  // Save the ticket with the new status
-
-        // Save the chat message to the chat collection
-        const chatMessage = new Chat({
-            ticketId: req.params.ticketId,
-            user,  // Save the user who is making the chat
-            message,
-        });
-
-        const savedMessage = await chatMessage.save();
-        res.status(201).json({ message: 'Message sent and ticket status updated.', chat: savedMessage });
+      // Find the ticket by ID
+      const ticket = await Ticket.findById(req.params.ticketId);
+      if (!ticket) return res.status(404).json({ message: 'Ticket not found.' });
+  
+      // Determine the new status based on the user role
+      let newStatus;
+      if (role === 'admin' || role === 'superadmin') {
+        newStatus = "در انتظار پاسخ";
+        await sendNotification(ticket);  // Notify admin role
+      } else if (role === 'user') {
+        newStatus = "در حال بررسی";
+      } else {
+        return res.status(400).json({ message: 'Invalid user role.' });
+      }
+  
+      // Update the ticket's status
+      ticket.status = newStatus;
+      ticket.updatedAt = new Date(); // Optionally update the 'updatedAt' timestamp
+      await ticket.save();
+  
+      // Save the chat message to the chat collection
+      const chatMessage = new Chat({
+        ticketId: req.params.ticketId,
+        user,  
+        message,
+        attachmentFiles: attachmentFileUrls,  // Save file URLs
+        role
+      });
+  
+      const savedMessage = await chatMessage.save();
+      res.status(201).json({ message: 'Message sent and ticket status updated.', chat: savedMessage });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+      console.error("Error saving the chat message:", err);
+      res.status(500).json({ message: err.message });
     }
-});
+  });
 module.exports = router;
