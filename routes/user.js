@@ -16,6 +16,7 @@ router.get("/verify", auth, async (req, res) => {
 
 // Create a new user and send OTP
 router.post("/", async (req, res) => {
+  // Validate user input
   const { error } = validateUser(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -26,8 +27,7 @@ router.post("/", async (req, res) => {
       // User exists but is not verified, resend OTP
       await sendOtp(existingUser);
       return res.json({
-        message:
-          "حساب شما موجود می باشد اما ایمیل تان تایید نشده است . رمز یک بار مصرف برای شما ارسال شد.",
+        message: "حساب شما موجود می باشد اما ایمیل تان تایید نشده است . رمز یک بار مصرف برای شما ارسال شد.",
         isVerified: existingUser.isVerified,
         email: existingUser.email,
       });
@@ -47,19 +47,23 @@ router.post("/", async (req, res) => {
   });
   if (licenseCodeInUse && licenseCodeInUse.email !== req.body.email) {
     return res.status(400).send(
-     
-        "کد لایسنس در حال حاضر توسط ایمیل دیگری استفاده شده است. لطفاً از یک کد لایسنس منحصر به فرد استفاده کنید.",
+      "کد لایسنس در حال حاضر توسط ایمیل دیگری استفاده شده است. لطفاً از یک کد لایسنس منحصر به فرد استفاده کنید."
     );
   }
-  const user = new User(
-    _.pick(req.body, [
-      "email",
-      "password",
-      "fullname",
-      "licenseCode",
-      "company",
-    ])
-  );
+
+  // Create a new user object
+  const user = new User({
+    email: req.body.email,
+    password: req.body.password,
+    fullname: req.body.fullname,
+    licenseCode: req.body.licenseCode,
+    company: req.body.company,
+    role: req.body.role || "user", // Default to 'user'
+    otp: (req.body.role === "user") ? null : undefined, // Set to null for child
+    otpExpiration: (req.body.role === "user") ? null : undefined, // Set to null for child
+  });
+  
+
   // Encrypt the password before saving
   const salt = await bcrypt.genSalt(10);
   user.password = await bcrypt.hash(user.password, salt);
@@ -70,8 +74,7 @@ router.post("/", async (req, res) => {
     await user.save();
 
     res.status(200).json({
-      message:
-        "User registered successfully. Please verify your email with the OTP sent to you.",
+      message: "User registered successfully. Please verify your email with the OTP sent to you.",
       isVerified: user.isVerified,
       email: user.email,
     });
@@ -112,6 +115,77 @@ router.post("/resend-otp", async (req, res) => {
   }
 });
 
+// Add Child User
+router.post("/add-child", auth, async (req, res) => {
+  // Validate the input for the child user
+  const { error } = validateUser(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  try {
+    // Check if the mother exists and has the 'user' role
+    const mother = await User.findOne({ _id: req.userId, role: 'user' });
+    if (!mother) {
+      return res.status(404).send("Mother not found or unauthorized.");
+    }
+
+    // Check if the child user already exists for this mother
+    const existingChild = await User.findOne({
+      email: req.body.email,
+      motherId: req.userId,
+    });
+
+    if (existingChild) {
+      return res.status(400).send("A child with this email already exists under this mother.");
+    }
+
+    // Create the child user without OTP fields
+    const childUser = new User({
+      ...req.body,
+      role: "child",
+      otp: null, // Explicitly set to null
+      otpExpiration: null, // Explicitly set to null
+      motherId: req.userId,
+      isVerified:true // Set the motherId to the authenticated user's ID
+    });
+
+    // Hash the password for the child user
+    const salt = await bcrypt.genSalt(10);
+    childUser.password = await bcrypt.hash(childUser.password, salt);
+
+    // Save the child user to the database
+    await childUser.save();
+
+    // Prepare child user information to be saved in the mother's record
+    const childInfo = {
+      email: childUser.email,
+      _id: childUser._id,
+      fullname: childUser.fullname,
+      company: childUser.company,
+      role: childUser.role,
+    };
+
+    // Push the child's details into the mother's children array
+    await User.findByIdAndUpdate(req.userId, { $push: { children: childInfo } });
+
+    // Send a response back to the client
+    res.status(201).send({
+      message: "Child user added successfully.",
+      child: childInfo,
+    });
+  } catch (ex) {
+    // Handle MongoDB duplicate email error
+    if (ex.code === 11000 && ex.keyPattern && ex.keyPattern.email) {
+      return res.status(400).send("Email already exists.");
+    }
+
+    console.error("Error adding child user:", ex);
+    res.status(500).send("Internal server error.");
+  }
+});
+
+
+
+
 
 
 // Verify OTP and activate the user
@@ -119,25 +193,31 @@ router.post("/otp", async (req, res) => {
   const { error } = validateOtp(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const user = await User.findOne({ email: req.body.email, otp: req.body.otp });
-  if (!user) return res.status(400).send("Invalid OTP or email.");
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user || user.otp !== req.body.otp) {
+      return res.status(400).send("Invalid OTP or email.");
+    }
 
-  // Check if OTP is expired
-  if (Date.now() > user.otpExpiration) {
-    return res.status(400).send("OTP has expired.");
+    if (Date.now() > user.otpExpiration) {
+      return res.status(400).send("OTP has expired.");
+    }
+
+    user.isVerified = true;
+    user.otp = null;
+    user.otpExpiration = null;
+
+    console.log("User before save:", user); // Log before saving
+    await user.save();
+
+    const token = user.generateAuthToken();
+    res.header("x-auth-token", token).send(_.pick(user, ["_id", "email", "fullname", "licenseCode", "company"]));
+  } catch (ex) {
+    console.error("Error during OTP verification:", ex);
+    res.status(500).send("Internal server error.");
   }
-
-  // Mark the user as verified and clear OTP fields
-  user.isVerified = true;
-  user.otp = null;
-  user.otpExpiration = null;
-  await user.save();
-
-  const token = user.generateAuthToken();
-  res
-    .header("x-auth-token", token)
-    .send(_.pick(user, ["_id", "email", "fullname", "licenseCode", "company"]));
 });
+
 
 router.get("/", superAdmin, async (req, res) => {
   try {

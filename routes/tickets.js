@@ -9,6 +9,7 @@ const fs = require("fs");
 const ExcelJS = require('exceljs');
 const sendAssign = require("../utils/sendAssign");
 const sendFinish = require("../utils/sendFinish");
+const { User, validateUser, validateOtp } = require("../models/user");
 
 
 
@@ -59,55 +60,53 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
 router.get("/users", auth, async (req, res) => {
   try {
     const userId = req.userId;
+    const user = await User.findById(userId);
+
+    if (!user) return res.status(404).send("User not found.");
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Initialize the filter with userId
-    const filter = { createdBy: userId };
+    let filter = {};
 
-    // Filter by date (single day)
-    if (req.query.date) {
-      const date = new Date(req.query.date);
-
-      if (isNaN(date.getTime())) {
-        return res.status(400).send("Invalid date format. Use ISO 8601 format.");
-      }
-
-      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-
-      filter.createdAt = {
-        $gte: startOfDay,
-        $lte: endOfDay,
-      };
+    if (user.role === "user") {  
+      const childrenIds = user.children.map((child) => child._id); 
+      filter.createdBy = { $in: [userId, ...childrenIds] };  
+    }
+    else if (user.role === "child") {
+      filter.createdBy = userId;  // Child can only see their own tickets
+    } else {
+      return res.status(403).send("Access denied.");
     }
 
-    // Filter by status
+    // Apply additional filters (e.g., date, status, problemType, company, ticketNumber, search)
+    if (req.query.date) {
+      const date = new Date(req.query.date);
+      if (isNaN(date.getTime())) return res.status(400).send("Invalid date format. Use ISO 8601 format.");
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+      filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
+    }
+
     if (req.query.status) {
       filter.status = req.query.status;
     }
 
-    // Filter by problemType
     if (req.query.problemType) {
       filter.problemType = req.query.problemType;
     }
 
-    // Filter by company
     if (req.query.company) {
       filter.company = req.query.company;
     }
 
-    // Filter by ticketNumber
     if (req.query.ticketNumber) {
       filter.ticketNumber = req.query.ticketNumber;
     }
 
-    // Filter by search (applies to request title and request content)
     if (req.query.search) {
       const searchRegex = new RegExp(req.query.search, 'i'); // Case-insensitive search
-
       filter.$or = [
         { requestTitle: searchRegex },
         { ticketNumber: searchRegex },
@@ -115,9 +114,8 @@ router.get("/users", auth, async (req, res) => {
       ];
     }
 
-    // Fetch tickets with filter, sort, skip, and limit
+    // Fetch tickets with the filter
     const tickets = await Ticket.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
-
     const totalTickets = await Ticket.countDocuments(filter);
 
     res.status(200).json({

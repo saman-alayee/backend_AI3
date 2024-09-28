@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
-const Joi = require("joi");
-const config = require("config");
 const jwt = require("jsonwebtoken");
+const config = require("config");
+const Joi = require("joi");
 
+// Define the user schema
 const userSchema = new mongoose.Schema(
   {
     email: {
@@ -25,41 +26,57 @@ const userSchema = new mongoose.Schema(
     },
     company: {
       type: String,
-      required: true,
       maxlength: 250,
     },
     licenseCode: {
       type: String,
-      required: true,
       maxlength: 124,
-      unique: true, // Ensuring the licenseCode is unique
+      unique: true,
     },
     otp: {
       type: String,
       maxlength: 6,
+      required: function() {
+        return this.role === "user" && !this.isVerified; // Only required if user is not verified
+      },
+      default: null,
     },
     otpExpiration: {
       type: Date,
+      required: function() {
+        return this.role === "user" && !this.isVerified; // Only required if user is not verified
+      },
+      default: null,
     },
+    
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    role: {
+      type: String,
+      required: true,
+      enum: ["user", "child"],
+      default: "user",
+    },
+    children: [
+      {
+        email: { type: String, required: true },
+        _id: { type: mongoose.Schema.Types.ObjectId, required: true },
+        fullname: { type: String, required: true },
+        company: { type: String, required: false },
+        role: { type: String, required: true, default: "child" },
+      },
+    ],
+    motherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   { timestamps: true }
 );
 
-userSchema.methods.generateAuthToken = function () {
-  const token = jwt.sign(
-    { _id: this._id, role: "user" },
-    config.get("jwtPrivateKey"),
-    { expiresIn: "12h" }
-  );
-  return token;
-};
-
-const User = mongoose.model("User", userSchema);
-
+// Validation functions
 function validateUser(user) {
   const schema = Joi.object({
     email: Joi.string().min(5).max(255).required().email(),
@@ -67,8 +84,19 @@ function validateUser(user) {
     fullname: Joi.string().max(124).required(),
     company: Joi.string().max(250).required(),
     licenseCode: Joi.string().max(124).required(),
+    otp: Joi.string().length(6).allow(null),
+    otpExpiration: Joi.date().allow(null),
+    motherId: Joi.string().length(24).allow(null),
   });
   return schema.validate(user);
+}
+
+function validateOtpFields(user) {
+  const schema = Joi.object({
+    otp: Joi.string().length(6).required(),
+    otpExpiration: Joi.date().required(),
+  });
+  return schema.validate({ otp: user.otp, otpExpiration: user.otpExpiration });
 }
 
 function validateOtp(otpRequest) {
@@ -79,6 +107,29 @@ function validateOtp(otpRequest) {
   return schema.validate(otpRequest);
 }
 
-exports.User = User;
-exports.validateUser = validateUser;
-exports.validateOtp = validateOtp;
+// Pre-save validation
+userSchema.pre("save", function (next) {
+  if (this.role === "user" && this.motherId) {
+    return next(new Error("User cannot have a motherId."));
+  }
+  if (this.role === "child" && !this.motherId) {
+    return next(new Error("Child must have a motherId."));
+  }
+  next();
+});
+
+// Token generation method
+userSchema.methods.generateAuthToken = function () {
+  const token = jwt.sign(
+    { _id: this._id, role: this.role },
+    config.get("jwtPrivateKey"),
+    { expiresIn: "12h" }
+  );
+  return token;
+};
+
+// User model
+const User = mongoose.model("User", userSchema);
+
+// Export model and validation functions
+module.exports = { User, validateUser, validateOtp, validateOtpFields };
