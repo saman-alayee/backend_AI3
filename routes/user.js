@@ -41,15 +41,15 @@ router.post("/", async (req, res) => {
     }
   }
 
-  // Check if the licenseCode is used by another email
-  const licenseCodeInUse = await User.findOne({
-    licenseCode: req.body.licenseCode,
-  });
-  if (licenseCodeInUse && licenseCodeInUse.email !== req.body.email) {
-    return res.status(400).send(
-      "کد لایسنس در حال حاضر توسط ایمیل دیگری استفاده شده است. لطفاً از یک کد لایسنس منحصر به فرد استفاده کنید."
-    );
-  }
+  // // Check if the licenseCode is used by another email
+  // const licenseCodeInUse = await User.findOne({
+  //   licenseCode: req.body.licenseCode,
+  // });
+  // if (licenseCodeInUse && licenseCodeInUse.email !== req.body.email) {
+  //   return res.status(400).send(
+  //     "کد لایسنس در حال حاضر توسط ایمیل دیگری استفاده شده است. لطفاً از یک کد لایسنس منحصر به فرد استفاده کنید."
+  //   );
+  // }
 
   // Create a new user object
   const user = new User({
