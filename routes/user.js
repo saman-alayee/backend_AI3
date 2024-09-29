@@ -10,7 +10,7 @@ const config = require("config");
 const jwt = require("jsonwebtoken");
 
 router.get("/verify", auth, async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password");
+  const user = await User.findById(req.userId).select("-password");
   res.send(user);
 });
 
