@@ -58,7 +58,7 @@ router.post("/", async (req, res) => {
     fullname: req.body.fullname,
     licenseCode: req.body.licenseCode,
     company: req.body.company,
-    role: req.body.role || "user", // Default to 'user'
+    role: "user", // Default to 'user'
     otp: (req.body.role === "user") ? null : undefined, // Set to null for child
     otpExpiration: (req.body.role === "user") ? null : undefined, // Set to null for child
   });

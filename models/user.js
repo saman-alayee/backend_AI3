@@ -31,7 +31,6 @@ const userSchema = new mongoose.Schema(
     licenseCode: {
       type: String,
       maxlength: 124,
-      unique: true,
     },
     otp: {
       type: String,
