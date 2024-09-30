@@ -326,4 +326,40 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+
+// delete child 
+router.delete("/delete-child/:id", auth, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find the authenticated mother user
+    const motherUser = await User.findById(req.userId);
+
+    if (!motherUser) {
+      return res.status(404).send("کاربر اصلی پیدا نشد.");
+    }
+
+    // Check if the child exists in the mother's children array
+    const childIndex = motherUser.children.findIndex((child) => child._id.toString() === id);
+
+    if (childIndex === -1) {
+      return res.status(404).send("این کاربر در لیست زیر مجموعه های شما نمی باشد.");
+    }
+
+    // Remove the child from the mother's children array
+    motherUser.children.splice(childIndex, 1);
+
+    // Save the updated mother user
+    await motherUser.save();
+
+    // Delete the child user document from the User collection
+    await User.findByIdAndDelete(id);
+
+    res.status(200).send("کاربر زیر مجموعه شما با موفقیت پاک شد .");
+  } catch (error) {
+    console.error("Error deleting child user:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 module.exports = router;
