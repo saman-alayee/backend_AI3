@@ -9,10 +9,42 @@ const sendOtp = require("../utils/sendOtp");
 const config = require("config");
 const jwt = require("jsonwebtoken");
 
+
+
+// user info with token
 router.get("/verify", auth, async (req, res) => {
   const user = await User.findById(req.userId).select("-password");
   res.send(user);
 });
+
+// children list 
+router.get("/children", auth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
+    const skip = (page - 1) * limit;
+
+    const user = await User.findById(req.userId).select("-password");
+
+    if (!user) {
+      return res.status(404).send("User not found.");
+    }
+
+    const totalChildren = user.children.length;
+    const paginatedChildren = user.children.slice(skip, skip + limit);
+
+    res.status(200).json({
+      totalChildren,
+      totalPages: Math.ceil(totalChildren / limit),
+      currentPage: page,
+      children: paginatedChildren,
+    });
+  } catch (error) {
+    console.error("Error fetching user's children:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 
 // Create a new user and send OTP
 router.post("/", async (req, res) => {
