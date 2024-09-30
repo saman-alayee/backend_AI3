@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
 
   res.json({
     status: "success",
-    role: "user",
+    role: user.role,
     token: accessToken,
     username: user.name,
     id: user._id,
