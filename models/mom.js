@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 
 // Define the mom Schema
 const momSchema = new mongoose.Schema({
-    ticketId: {
+    userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Ticket",
+        ref: "User",
         required: true,
       },
       daart: {
@@ -17,6 +17,18 @@ const momSchema = new mongoose.Schema({
         required: true,
       },
       customer: {
+        type: String,
+        required: true,
+      },
+      title: {
+        type: String,
+        required: true,
+      },
+      description: {
+        type: String,
+        required: true,
+      },
+      company: {
         type: String,
         required: true,
       },
@@ -32,9 +44,12 @@ const Mom = mongoose.model("Mom", momSchema);
 // Validate Mom Input
 function validateMom(mom) {
   const schema = Joi.object({
-    ticketId: Joi.string().required(),
+    userId: Joi.string().required(),
+    title: Joi.string().required(),
+    description: Joi.string().required(),
     daart: Joi.string().required(),
     webengage: Joi.string().required(),
+    company: Joi.string().required(),
     customer: Joi.string().required(),
   });
   return schema.validate(mom);

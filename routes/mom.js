@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { Mom, validateMom } = require("../models/mom");
-const { Ticket } = require("../models/ticket");
+const { User } = require("../models/user");
 const auth = require("../middleware/auth");
 const adminAuth = require("../middleware/adminAuth");
 
@@ -39,17 +39,19 @@ router.post("/", adminAuth, async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   try {
-    // Check if the related ticket exists
-    const ticket = await Ticket.findById(req.body.ticketId);
-    if (!ticket) return res.status(404).json({ message: "Ticket not found." });
+    // Check if the related user exists
+    const user = await User.findById(req.body.userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     // Create a new Mom instance
     const momData = new Mom({
-      ticketId: req.body.ticketId,
       userId: req.body.userId,
       daart: req.body.daart,
       webengage: req.body.webengage,
       customer: req.body.customer,
+      company: req.body.company,
+      title: req.body.title,
+      description: req.body.description,
     });
 
     // Save the new Mom instance to the database
@@ -61,19 +63,30 @@ router.post("/", adminAuth, async (req, res) => {
   }
 });
 
-// Get moms by ticketId
-router.get("/ticket/:ticketId", auth, async (req, res) => {
+// Get moms by userId
+router.get("/users/:userId", auth, async (req, res) => {
   try {
-    const ticketId = req.params.ticketId;
-
-    // Find MOMs by ticketId
-    const moms = await Mom.find({ ticketId: ticketId });
+    const userId = req.params.userId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    // Find MOMs by userId
+    const moms = await Mom.find({ userId: userId })
+      .sort({ timestamp: 1 })
+      .skip(skip)
+      .limit(limit);
 
     if (!moms || moms.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No moms found for this ticket." });
+      return res.status(404).json({ message: "No moms found for this user." });
     }
+    const totalMoms = await Mom.countDocuments();
+
+    res.status(200).json({
+      totalMoms,
+      totalPages: Math.ceil(totalMoms / limit),
+      currentPage: page,
+      moms,
+    });
 
     res.status(200).json(moms);
   } catch (err) {
@@ -96,24 +109,25 @@ router.delete("/:id", adminAuth, async (req, res) => {
 // Edit mom (only one field at a time)
 router.put("/:id", adminAuth, async (req, res) => {
   try {
-    const { ticketId, userId, daart, webengage, customer } = req.body;
-    
+    const { daart, webengage, customer,company,title,description } = req.body;
+
     // Prepare an empty object to hold the updates
     const updates = {};
 
     // Add fields to the update object only if they are provided in the request body
-    if (ticketId) updates.ticketId = ticketId;
-    if (userId) updates.userId = userId;
     if (daart) updates.daart = daart;
     if (webengage) updates.webengage = webengage;
     if (customer) updates.customer = customer;
-
+    if (company) updates.company = company;
+    if (title) updates.title = title;
+    if (description) updates.description = description;
     // If no fields are provided, return a bad request
     if (Object.keys(updates).length === 0) {
-      return res.status(400).send("Please provide at least one field to update.");
+      return res
+        .status(400)
+        .send("Please provide at least one field to update.");
     }
 
-    // Find the Mom instance by ID and update only the provided field(s)
     const updatedMom = await Mom.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true,
