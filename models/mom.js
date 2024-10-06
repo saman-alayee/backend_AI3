@@ -32,6 +32,10 @@ const momSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
+      date: {
+        type: String,
+        required: true,
+      },
       timestamp: {
         type: Date,
         default: Date.now,
@@ -50,6 +54,7 @@ function validateMom(mom) {
     daart: Joi.string().required(),
     webengage: Joi.string().required(),
     company: Joi.string().required(),
+    date: Joi.string().required(),
     customer: Joi.string().required(),
   });
   return schema.validate(mom);

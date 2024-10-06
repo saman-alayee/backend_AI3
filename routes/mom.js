@@ -52,6 +52,7 @@ router.post("/", adminAuth, async (req, res) => {
       company: req.body.company,
       title: req.body.title,
       description: req.body.description,
+      date: req.body.date,
     });
 
     // Save the new Mom instance to the database
@@ -109,7 +110,8 @@ router.delete("/:id", adminAuth, async (req, res) => {
 // Edit mom (only one field at a time)
 router.put("/:id", adminAuth, async (req, res) => {
   try {
-    const { daart, webengage, customer,company,title,description } = req.body;
+    const { daart, webengage, customer, company, title, description, date } =
+      req.body;
 
     // Prepare an empty object to hold the updates
     const updates = {};
@@ -121,6 +123,7 @@ router.put("/:id", adminAuth, async (req, res) => {
     if (company) updates.company = company;
     if (title) updates.title = title;
     if (description) updates.description = description;
+    if (date) updates.date = date;
     // If no fields are provided, return a bad request
     if (Object.keys(updates).length === 0) {
       return res

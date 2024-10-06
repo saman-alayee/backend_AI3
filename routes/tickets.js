@@ -9,6 +9,7 @@ const fs = require("fs");
 const ExcelJS = require('exceljs');
 const sendAssign = require("../utils/sendAssign");
 const sendFinish = require("../utils/sendFinish");
+const sendWengage = require("../utils/sendWengage");
 const { User, validateUser, validateOtp } = require("../models/user");
 
 
@@ -309,7 +310,7 @@ router.get("/", adminAuth, async (req, res) => {
   }
 });
 
-// excel export
+// excel export of tickets
 router.get("/export/excel",adminAuth, async (req, res) => {
   try {
     // Fetch all tickets
@@ -385,7 +386,7 @@ router.get("/export/excel",adminAuth, async (req, res) => {
   }
 });
 
-// get single 
+// get single ticket
 router.get("/:id", adminAuth, async (req, res) => {
   try {
     // Get ticket ID from the route parameters
@@ -450,6 +451,7 @@ router.delete("/:id", adminAuth, async (req, res) => {
   }
 });
 
+// assign a admin to ticket
 router.put("/assign", adminAuth, async (req, res) => {
   const { ticketId, email } = req.body;
 
@@ -511,6 +513,8 @@ router.put("/:id/finish", adminAuth, async (req, res) => {
   }
 });
 
+
+// just for change status (web engage side)
 router.put("/:id", adminAuth, async (req, res) => {
   try {
     const ticketId = req.params.id;
@@ -527,6 +531,7 @@ router.put("/:id", adminAuth, async (req, res) => {
     }
 
     ticket.status = status;
+    await sendWengage(ticket)
     await ticket.save();
 
     res.status(200).json(ticket);
