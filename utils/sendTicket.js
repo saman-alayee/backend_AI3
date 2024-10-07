@@ -17,7 +17,7 @@ async function sendTicket(ticket) {
     await transporter.sendMail({
       from: '"MAYND" <crm@maynd.ir>', // Ensure "From" address is correct
       to: "cs.maynd@gmail.com",
-      cc: ["hesan.ghaffari@daartagency.com", "sahba.sadegh@daartagency.com","saman.alaii10@gmail.com"],
+      cc: ["hesan.ghaffari@daartagency.com", "sahba.sadegh@daartagency.com"],
       subject: `ایشوی جدید`,
       html: `
         <div style="direction: rtl; text-align: right;">
