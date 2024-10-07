@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendNotification(user) {
+async function sendTicket(user) {
   try {
     
     await transporter.sendMail({
@@ -21,11 +21,9 @@ async function sendNotification(user) {
       html: `
         <div style="direction: rtl; text-align: right;">
           <p> سلام!</p>
-          <p> ایشوی شما با شماره ..... پس از بررسی اولیه توسط تیم ما، جهت بررسی دقیقتر به ارائه دهنده سرویس ارجاع داده شده است و این ایمیل جهت اطلاعرسانی به شماست، ضمن تشکر از صبوری شما، ما در حال پیگیری این موضوع هستیم و به محض دریافت هرگونه بهروزرسانی از سمت سرویسدهنده، شما را در جریان خواهیم گذاشت.</p>
-           <p> در صورت نیاز به جزئیات بیشتر، لطفاً با ما در تماس باشید.</p>
-           <p> با تشکر از صبر و اعتماد شما.</p>
-           <p> با احترام
-تیم پشتیبانی مایند</p>
+          
+         
+
           </div>
       `,
     });
@@ -36,4 +34,4 @@ async function sendNotification(user) {
   }
 }
 
-module.exports = sendNotification;
+module.exports = sendTicket;

@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendNotification(user) {
+async function sendWengage(user) {
   try {
     
     await transporter.sendMail({
@@ -37,4 +37,4 @@ async function sendNotification(user) {
   }
 }
 
-module.exports = sendNotification;
+module.exports = sendWengage;

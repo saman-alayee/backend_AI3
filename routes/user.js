@@ -149,28 +149,27 @@ router.post("/resend-otp", async (req, res) => {
 
 // Add Child User
 router.post("/add-child", auth, async (req, res) => {
-  // Validate the input for the child user
   const { error } = validateUser(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   try {
-    // Check if the mother exists and has the 'user' role
     const mother = await User.findOne({ _id: req.userId, role: 'user' });
     if (!mother) {
-      return res.status(404).send("Mother not found or unauthorized.");
+      return res.status(404).send("اکانت مادر پیدا نشد .");
+    }
+    if(mother.licenseCode !== req.body.licenseCode){
+      return res.status(404).send("لایسنس کد کاربر با لایسنس کاربر مادر یکی نمی باشد .")
     }
 
-    // Check if the child user already exists for this mother
     const existingChild = await User.findOne({
       email: req.body.email,
       motherId: req.userId,
     });
 
     if (existingChild) {
-      return res.status(400).send("A child with this email already exists under this mother.");
+      return res.status(400).send("این کاربر قبلا اضافه شده است .");
     }
 
-    // Create the child user without OTP fields
     const childUser = new User({
       ...req.body,
       role: "child",
@@ -180,14 +179,11 @@ router.post("/add-child", auth, async (req, res) => {
       isVerified:true // Set the motherId to the authenticated user's ID
     });
 
-    // Hash the password for the child user
     const salt = await bcrypt.genSalt(10);
     childUser.password = await bcrypt.hash(childUser.password, salt);
 
-    // Save the child user to the database
     await childUser.save();
 
-    // Prepare child user information to be saved in the mother's record
     const childInfo = {
       email: childUser.email,
       _id: childUser._id,
@@ -196,18 +192,16 @@ router.post("/add-child", auth, async (req, res) => {
       role: childUser.role,
     };
 
-    // Push the child's details into the mother's children array
     await User.findByIdAndUpdate(req.userId, { $push: { children: childInfo } });
 
-    // Send a response back to the client
     res.status(201).send({
-      message: "Child user added successfully.",
+      message: "کاربر با موفقیت اضافه شد .",
       child: childInfo,
     });
   } catch (ex) {
     // Handle MongoDB duplicate email error
     if (ex.code === 11000 && ex.keyPattern && ex.keyPattern.email) {
-      return res.status(400).send("Email already exists.");
+      return res.status(400).send("ایمیل موجود می باشد .");
     }
 
     console.error("Error adding child user:", ex);
@@ -331,14 +325,12 @@ router.delete("/delete-child/:id", auth, async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Find the authenticated mother user
     const motherUser = await User.findById(req.userId);
 
     if (!motherUser) {
       return res.status(404).send("کاربر اصلی پیدا نشد.");
     }
 
-    // Check if the child exists in the mother's children array
     const childIndex = motherUser.children.findIndex((child) => child._id.toString() === id);
 
     if (childIndex === -1) {
@@ -348,10 +340,8 @@ router.delete("/delete-child/:id", auth, async (req, res) => {
     // Remove the child from the mother's children array
     motherUser.children.splice(childIndex, 1);
 
-    // Save the updated mother user
     await motherUser.save();
 
-    // Delete the child user document from the User collection
     await User.findByIdAndDelete(id);
 
     res.status(200).send("کاربر زیر مجموعه شما با موفقیت پاک شد .");

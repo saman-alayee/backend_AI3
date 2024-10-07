@@ -16,8 +16,6 @@ router.get("/", adminAuth, async (req, res) => {
       .sort({ timestamp: 1 })
       .skip(skip)
       .limit(limit);
-    if (!moms || moms.length === 0)
-      return res.status(404).json({ message: "هیچ صورت جلسه ای موجود نمی باشد ." });
 
     const totalMoms = await Mom.countDocuments();
 
