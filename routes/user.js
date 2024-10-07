@@ -90,6 +90,7 @@ router.post("/", async (req, res) => {
     fullname: req.body.fullname,
     licenseCode: req.body.licenseCode,
     company: req.body.company,
+    phone: req.body.phone,
     role: "user", // Default to 'user'
     otp: (req.body.role === "user") ? null : undefined, // Set to null for child
     otpExpiration: (req.body.role === "user") ? null : undefined, // Set to null for child
@@ -190,6 +191,7 @@ router.post("/add-child", auth, async (req, res) => {
       fullname: childUser.fullname,
       company: childUser.company,
       role: childUser.role,
+      phone:childUser.phone
     };
 
     await User.findByIdAndUpdate(req.userId, { $push: { children: childInfo } });

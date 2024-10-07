@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       maxlength: 124,
     },
+    phone: {
+      type: String,
+      maxlength: 124,
+      default: null,
+    },
     otp: {
       type: String,
       maxlength: 6,
@@ -82,6 +87,7 @@ function validateUser(user) {
     password: Joi.string().min(5).max(1024).required(),
     fullname: Joi.string().max(124).required(),
     company: Joi.string().max(250).required(),
+    phone: Joi.string().max(124).optional(),
     licenseCode: Joi.string().max(124).required(),
     otp: Joi.string().length(6).allow(null),
     otpExpiration: Joi.date().allow(null),
