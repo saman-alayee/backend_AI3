@@ -281,22 +281,41 @@ router.put("/", async (req, res) => {
       return res.status(400).send("Invalid token.");
     }
 
-    const { password } = req.body;
-    if (!password) return res.status(400).send("رمز جدید را باید وارد کنید .");
+    const { password, fullname } = req.body;
 
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Prepare an update object for fields to be updated
+    const updates = {};
 
-    // Update the password field using updateOne()
-    await User.updateOne({ _id: userId }, { password: hashedPassword });
+    if (password) {
+      // Hash the new password if provided
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(password, salt);
+    }
 
-    res.send("رمز عبور با موفقیت بروز رسانی شد.");
+    if (fullname) {
+      // Allow updating fullname if provided
+      updates.fullname = fullname;
+    }
+
+    // Ensure there's something to update
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).send("Please provide data to update.");
+    }
+
+    // Update the user fields using updateOne
+    const updatedUser = await User.updateOne({ _id: userId }, updates);
+
+    if (!updatedUser) {
+      return res.status(404).send("User not found.");
+    }
+
+    res.send("User profile updated successfully.");
   } catch (error) {
-    console.error("Error updating password:", error);
+    console.error("Error updating profile:", error);
     res.status(500).send("Internal Server Error");
   }
 });
+
 
 
 router.get("/:id", async (req, res) => {
