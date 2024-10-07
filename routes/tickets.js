@@ -10,6 +10,7 @@ const ExcelJS = require('exceljs');
 const sendAssign = require("../utils/sendAssign");
 const sendFinish = require("../utils/sendFinish");
 const sendWengage = require("../utils/sendWengage");
+const sendTicket = require("../utils/sendTicket")
 const { User, validateUser, validateOtp } = require("../models/user");
 
 
@@ -51,6 +52,7 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
 
   try {
     await ticket.save();
+    await sendTicket(ticket)
     res.status(201).send(ticket);
   } catch (error) {
     res.status(500).send(error);
