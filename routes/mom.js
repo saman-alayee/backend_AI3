@@ -17,7 +17,7 @@ router.get("/", adminAuth, async (req, res) => {
       .skip(skip)
       .limit(limit);
     if (!moms || moms.length === 0)
-      return res.status(404).json({ message: "No moms found." });
+      return res.status(404).json({ message: "هیچ صورت جلسه ای موجود نمی باشد ." });
 
     const totalMoms = await Mom.countDocuments();
 
@@ -41,7 +41,7 @@ router.post("/", adminAuth, async (req, res) => {
   try {
     // Check if the related user exists
     const user = await User.findById(req.body.userId);
-    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user) return res.status(404).json({ message: "کاربر موجود نمی باشد ." });
 
     // Create a new Mom instance
     const momData = new Mom({
@@ -78,7 +78,7 @@ router.get("/users/:userId", auth, async (req, res) => {
       .limit(limit);
 
     if (!moms || moms.length === 0) {
-      return res.status(404).json({ message: "No moms found for this user." });
+      return res.status(404).json({ message: "برای این کاربر هیچ صورت جلسه ای یافت  نشد ." });
     }
     const totalMoms = await Mom.countDocuments();
 
@@ -99,8 +99,8 @@ router.get("/users/:userId", auth, async (req, res) => {
 router.delete("/:id", adminAuth, async (req, res) => {
   try {
     const mom = await Mom.findByIdAndRemove(req.params.id);
-    if (!mom) return res.status(404).send("mom not found.");
-    res.send("mom deleted successfully.");
+    if (!mom) return res.status(404).send("هیچ صورت جلسه ای موجود نمی باشد");
+    res.send("صورت جلسه با موفقیت پاک شد .");
   } catch (error) {
     console.error("Error deleting mom:", error);
     res.status(500).send("Internal Server Error");
@@ -128,7 +128,7 @@ router.put("/:id", adminAuth, async (req, res) => {
     if (Object.keys(updates).length === 0) {
       return res
         .status(400)
-        .send("Please provide at least one field to update.");
+        .send("حداقل یک فیلد باید تغییر کند .");
     }
 
     const updatedMom = await Mom.findByIdAndUpdate(req.params.id, updates, {
@@ -137,7 +137,7 @@ router.put("/:id", adminAuth, async (req, res) => {
     });
 
     if (!updatedMom) {
-      return res.status(404).send("Mom not found.");
+      return res.status(404).send("هیچ صورت جلسه ای موجود نمی باشد");
     }
 
     res.status(200).json(updatedMom);

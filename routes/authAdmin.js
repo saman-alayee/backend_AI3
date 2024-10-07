@@ -11,7 +11,7 @@ router.post("/", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let admin = await Admin.findOne({ email: req.body.email });
-  if (!admin) return res.status(400).send("ایمیل موحود نمی باشد . ");
+  if (!admin) return res.status(400).send("ایمیل موجود نمی باشد . ");
 
   const validPassword = await bcrypt.compare(req.body.password, admin.password);
   if (!validPassword) return res.status(400).send("رمز عبور اشتباه می باشد.");

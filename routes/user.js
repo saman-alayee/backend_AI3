@@ -228,18 +228,17 @@ router.post("/otp", async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
     if (!user || user.otp !== req.body.otp) {
-      return res.status(400).send("Invalid OTP or email.");
+      return res.status(400).send("ایمیل یا رمز یک بار مصرف اشتباه می باشد .");
     }
 
     if (Date.now() > user.otpExpiration) {
-      return res.status(400).send("OTP has expired.");
+      return res.status(400).send("رمز یک بار مصرف منقضی شده است .");
     }
 
     user.isVerified = true;
     user.otp = null;
     user.otpExpiration = null;
 
-    console.log("User before save:", user); // Log before saving
     await user.save();
 
     const token = user.generateAuthToken();
@@ -287,7 +286,7 @@ router.put("/", async (req, res) => {
     }
 
     const { password } = req.body;
-    if (!password) return res.status(400).send("New password is required.");
+    if (!password) return res.status(400).send("رمز جدید را باید وارد کنید .");
 
     // Hash the new password
     const salt = await bcrypt.genSalt(10);
@@ -307,7 +306,7 @@ router.put("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
-    if (!user) return res.status(404).send("User not found.");
+    if (!user) return res.status(404).send("کاربر پیدا نشد .");
     res.send(user);
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -318,8 +317,8 @@ router.get("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const user = await User.findByIdAndRemove(req.params.id);
-    if (!user) return res.status(404).send("User not found.");
-    res.send("User deleted successfully.");
+    if (!user) return res.status(404).send("کاربر پیدا نشد .");
+    res.send("کاربر با موفقیت پاک شد .");
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).send("Internal Server Error");
