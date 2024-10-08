@@ -30,6 +30,26 @@ router.get("/", adminAuth, async (req, res) => {
   }
 });
 
+
+
+// get single mom
+router.get("/:id", adminAuth, async (req, res) => {
+  try {
+    const momId = req.params.id;
+
+    const mom = await Mom.findById(momId);
+
+    if (!mom) {
+      return res.status(404).json({ message: "mom not found" });
+    }
+
+    res.status(200).json(mom);
+  } catch (error) {
+    res.status(500).send("An error occurred while fetching the mom.");
+  }
+});
+
+
 // Create a new mom by admin
 router.post("/", adminAuth, async (req, res) => {
   // Validate the request body
@@ -75,9 +95,6 @@ router.get("/users/:userId", auth, async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    if (!moms || moms.length === 0) {
-      return res.status(404).json({ message: "برای این کاربر هیچ صورت جلسه ای یافت  نشد ." });
-    }
     const totalMoms = await Mom.countDocuments();
 
     res.status(200).json({
@@ -92,6 +109,27 @@ router.get("/users/:userId", auth, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+// get single mom is user side
+router.get("/users/:userId/moms/:momId", auth, async (req, res) => {
+  try {
+    const { userId, momId } = req.params;
+
+    // Find a specific MOM by userId and momId
+    const mom = await Mom.findOne({ _id: momId, userId: userId });
+
+    if (!mom) {
+      return res.status(404).json({ message: "Mom not found for this user." });
+    }
+
+    res.status(200).json(mom);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+
 
 // delete mom
 router.delete("/:id", adminAuth, async (req, res) => {

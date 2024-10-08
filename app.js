@@ -51,10 +51,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+// Handle undefined routes (404)
+app.use((req, res, next) => {
+  res.status(404).json({ message: "Endpoint not found" });
 });
+
 
 // Error handler
 app.use(function(err, req, res, next) {
