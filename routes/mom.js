@@ -19,13 +19,14 @@ router.get("/", adminAuth, async (req, res) => {
 
     // Search query parameters (e.g., title, company)
     const searchQuery = {};
-    if (req.query.title) {
-      searchQuery.title = { $regex: req.query.title, $options: "i" }; // Case-insensitive regex search
-    }
-    if (req.query.company) {
-      searchQuery.company = { $regex: req.query.company, $options: "i" }; // Case-insensitive regex search
-    }
 
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, 'i'); // Case-insensitive search
+      searchQuery.$or = [
+        { title: searchRegex },
+        { company: searchRegex }
+      ];
+    }
     const totalMoms = await Mom.countDocuments();
 
     res.status(200).json({
