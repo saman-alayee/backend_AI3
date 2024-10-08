@@ -104,7 +104,6 @@ router.get("/users/:userId", auth, async (req, res) => {
       moms,
     });
 
-    res.status(200).json(moms);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
