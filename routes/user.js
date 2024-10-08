@@ -5,6 +5,7 @@ const _ = require("lodash");
 const bcrypt = require("bcrypt");
 const superAdmin = require("../middleware/superAdmin");
 const auth = require("../middleware/auth");
+const adminAuth = require("../middleware/adminAuth");
 const sendOtp = require("../utils/sendOtp");
 const config = require("config");
 const jwt = require("jsonwebtoken");
@@ -211,7 +212,28 @@ router.post("/add-child", auth, async (req, res) => {
   }
 });
 
+// admin verify users
+// Verify user by admin
+router.put("/adminVerify/:id", adminAuth, async (req, res) => {
+  try {
+    const userId = req.params.id;
 
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).send("کاربر یافت نشد."); // User not found
+    }
+
+    // Update the user's verification status
+    user.isAdminVerified = true; // Set the user as verified
+    await user.save();
+
+    res.status(200).send("کاربر با موفقیت تایید شد."); // User successfully verified
+  } catch (error) {
+    console.error("Error verifying user:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 
 
