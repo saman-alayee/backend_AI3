@@ -281,7 +281,7 @@ router.put("/", async (req, res) => {
       return res.status(400).send("Invalid token.");
     }
 
-    const { password, fullname } = req.body;
+    const { password, fullname,phone } = req.body;
 
     // Prepare an update object for fields to be updated
     const updates = {};
@@ -293,8 +293,10 @@ router.put("/", async (req, res) => {
     }
 
     if (fullname) {
-      // Allow updating fullname if provided
       updates.fullname = fullname;
+    }
+    if (phone) {
+      updates.phone = phone;
     }
 
     // Ensure there's something to update
