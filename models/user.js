@@ -40,19 +40,22 @@ const userSchema = new mongoose.Schema(
     otp: {
       type: String,
       maxlength: 6,
-      required: function() {
+      required: function () {
         return this.role === "user" && !this.isVerified; // Only required if user is not verified
       },
       default: null,
     },
     otpExpiration: {
       type: Date,
-      required: function() {
+      required: function () {
         return this.role === "user" && !this.isVerified; // Only required if user is not verified
       },
       default: null,
     },
-    
+    isAdminVerified: {
+      type: Boolean,
+      default: false,
+    },
     isVerified: {
       type: Boolean,
       default: false,

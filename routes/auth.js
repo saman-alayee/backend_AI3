@@ -6,8 +6,7 @@ const bcrypt = require("bcrypt");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const config = require("config");
-const sendOtp = require("../utils/sendOtp"); 
-
+const sendOtp = require("../utils/sendOtp");
 
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
@@ -20,18 +19,29 @@ router.post("/", async (req, res) => {
     // User exists but is not verified
     await sendOtp(user); // Resend OTP
     return res.json({
-      message: "حساب کاربری شما تایید نشده است. لطفا کد ارسال شده را وارد کنید.",
+      message:
+        "حساب کاربری شما تایید نشده است. لطفا کد ارسال شده را وارد کنید.",
       isVerified: false,
-      email:user.email,
-      
+      email: user.email,
     });
   }
 
-  const validatePassword = await bcrypt.compare(req.body.password, user.password);
+  // Check if the user is verified by admin (isAdminVerified)
+  if (!user.isAdminVerified) {
+    return res.status(403).send({
+      message: "اکانت شما هنوز توسط ادمین تایید نشده است. لطفا منتظر بمانید.",
+      isAdminVerified: false,
+      email: user.email,
+    });
+  }
+  const validatePassword = await bcrypt.compare(
+    req.body.password,
+    user.password
+  );
   if (!validatePassword) return res.status(400).send("رمز عبور اشتباه است.");
 
   const accessToken = jwt.sign(
-    { _id: user._id, isUser: true,isVerified:true },
+    { _id: user._id, isUser: true, isVerified: true },
     config.get("jwtPrivateKey")
   );
 
@@ -42,13 +52,10 @@ router.post("/", async (req, res) => {
     username: user.name,
     id: user._id,
     email: user.email,
-    isVerified:user.isVerified,
-    fullname:user.fullname
-
+    isVerified: user.isVerified,
+    fullname: user.fullname,
   });
 });
-
-
 
 function validate(req) {
   const schema = Joi.object({
