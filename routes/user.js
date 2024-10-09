@@ -7,6 +7,8 @@ const superAdmin = require("../middleware/superAdmin");
 const auth = require("../middleware/auth");
 const adminAuth = require("../middleware/adminAuth");
 const sendOtp = require("../utils/sendOtp");
+const sendAccept = require("../utils/sendAccept");
+const sendFailed = require("../utils/sendFailed");
 const config = require("config");
 const jwt = require("jsonwebtoken");
 
@@ -220,20 +222,33 @@ router.put("/adminVerify/:id", adminAuth, async (req, res) => {
 
     // Find the user by ID
     const user = await User.findById(userId);
+    console.log(user.email)
     if (!user) {
       return res.status(404).send("کاربر یافت نشد."); // User not found
     }
 
-    // Update the user's verification status
-    user.isAdminVerified = true; // Set the user as verified
-    await user.save();
+    const { status } = req.body; // Expecting { status: "accept" } or { status: "reject" }
 
-    res.status(200).send("کاربر با موفقیت تایید شد."); // User successfully verified
+    if (status === "accept") {
+      user.isAdminVerified = true; // Set the user as verified
+      await user.save();
+      await sendAccept(user)
+      return res.status(200).send("کاربر با موفقیت تایید شد."); // User successfully verified
+    } 
+    else if (status === "reject") {
+      user.isAdminVerified = false; // Set the user as not verified
+      await user.save();
+      await sendFailed(user)
+      return res.status(200).send("کاربر با موفقیت رد شد."); // User successfully rejected
+    } else {
+      return res.status(400).send("وضعیت تایید ارسال نشده است."); // Invalid status
+    }
   } catch (error) {
     console.error("Error verifying user:", error);
     res.status(500).send("Internal Server Error");
   }
 });
+
 
 
 

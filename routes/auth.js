@@ -13,7 +13,8 @@ router.post("/", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let user = await User.findOne({ email: req.body.email });
-  if (!user) return res.status(400).json({ message: "کاربری با این ایمیل یافت نشد." });
+  if (!user)
+    return res.status(400).json({ message: "کاربری با این ایمیل یافت نشد." });
 
   if (!user.isVerified) {
     // User exists but is not verified
@@ -29,7 +30,8 @@ router.post("/", async (req, res) => {
   // Check if the user is verified by admin (isAdminVerified)
   if (!user.isAdminVerified) {
     return res.status(403).send({
-      message: "اکانت شما هنوز توسط ادمین تایید نشده است. لطفا منتظر بمانید.",
+      message:
+        "در حال حاضر حساب کاربری شما در صف بررسی قرار دارد. کارشناسان ما به زودی حساب شما را بررسی خواهند کرد و به محض تکمیل فرآیند تأیید، از طریق ایمیل به شما اطلاع خواهیم داد.",
       isAdminVerified: false,
       email: user.email,
     });
@@ -38,7 +40,8 @@ router.post("/", async (req, res) => {
     req.body.password,
     user.password
   );
-  if (!validatePassword) return res.status(400).json({message:"رمز عبور اشتباه است."});
+  if (!validatePassword)
+    return res.status(400).json({ message: "رمز عبور اشتباه است." });
 
   const accessToken = jwt.sign(
     { _id: user._id, isUser: true, isVerified: true },
