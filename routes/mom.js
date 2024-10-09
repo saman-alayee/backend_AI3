@@ -12,22 +12,25 @@ router.get("/", adminAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const moms = await Mom.find()
-      .sort({ timestamp: 1 })
-      .skip(skip)
-      .limit(limit);
-
     // Search query parameters (e.g., title, company)
     const searchQuery = {};
 
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i'); // Case-insensitive search
+      const searchRegex = new RegExp(req.query.search, "i"); // Case-insensitive search
       searchQuery.$or = [
         { title: searchRegex },
         { company: searchRegex }
       ];
     }
-    const totalMoms = await Mom.countDocuments();
+
+    // Fetch moms with search and pagination
+    const moms = await Mom.find(searchQuery)
+      .sort({ timestamp: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Get total moms count for the search query
+    const totalMoms = await Mom.countDocuments(searchQuery);
 
     res.status(200).json({
       totalMoms,
@@ -39,6 +42,7 @@ router.get("/", adminAuth, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 // get single mom
 router.get("/:id", adminAuth, async (req, res) => {
