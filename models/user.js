@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema(
     },
     isAdminVerified: {
       type: Boolean,
-      default: false,
+      default: null,
     },
     isVerified: {
       type: Boolean,
