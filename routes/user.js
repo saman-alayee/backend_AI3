@@ -159,10 +159,17 @@ router.post("/add-child", auth, async (req, res) => {
   try {
     const mother = await User.findOne({ _id: req.userId, role: 'user' });
     if (!mother) {
-      return res.status(404).send("اکانت مادر پیدا نشد .");
+      return res.status(404).send("اکانت مادر پیدا نشد.");
     }
-    if(mother.licenseCode !== req.body.licenseCode){
-      return res.status(404).send("لایسنس کد کاربر با لایسنس کاربر مادر یکی نمی باشد .")
+    
+    if (mother.licenseCode !== req.body.licenseCode) {
+      return res.status(400).send("لایسنس کد کاربر با لایسنس کاربر مادر یکی نمی باشد.");
+    }
+
+    // Check the number of existing children
+    const childCount = await User.countDocuments({ motherId: req.userId, role: 'child' });
+    if (childCount >= 3) {
+      return res.status(400).send("مادر نمی تواند بیشتر از 3 فرزند اضافه کند.");
     }
 
     const existingChild = await User.findOne({
@@ -171,7 +178,7 @@ router.post("/add-child", auth, async (req, res) => {
     });
 
     if (existingChild) {
-      return res.status(400).send("این کاربر قبلا اضافه شده است .");
+      return res.status(400).send("این کاربر قبلا اضافه شده است.");
     }
 
     const childUser = new User({
@@ -180,7 +187,7 @@ router.post("/add-child", auth, async (req, res) => {
       otp: null, // Explicitly set to null
       otpExpiration: null, // Explicitly set to null
       motherId: req.userId,
-      isVerified:true // Set the motherId to the authenticated user's ID
+      isVerified: true // Set the motherId to the authenticated user's ID
     });
 
     const salt = await bcrypt.genSalt(10);
@@ -194,25 +201,26 @@ router.post("/add-child", auth, async (req, res) => {
       fullname: childUser.fullname,
       company: childUser.company,
       role: childUser.role,
-      phone:childUser.phone
+      phone: childUser.phone
     };
 
     await User.findByIdAndUpdate(req.userId, { $push: { children: childInfo } });
 
     res.status(201).send({
-      message: "کاربر با موفقیت اضافه شد .",
+      message: "کاربر با موفقیت اضافه شد.",
       child: childInfo,
     });
   } catch (ex) {
     // Handle MongoDB duplicate email error
     if (ex.code === 11000 && ex.keyPattern && ex.keyPattern.email) {
-      return res.status(400).send("ایمیل موجود می باشد .");
+      return res.status(400).send("ایمیل موجود می باشد.");
     }
 
     console.error("Error adding child user:", ex);
     res.status(500).send("Internal server error.");
   }
 });
+
 
 // admin verify users
 // Verify user by admin
