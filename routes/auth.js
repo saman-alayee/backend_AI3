@@ -28,7 +28,15 @@ router.post("/", async (req, res) => {
   }
 
   // Check if the user is verified by admin (isAdminVerified)
-  if (!user.isAdminVerified) {
+  if (user.isAdminVerified === false) {
+    return res.status(403).send({
+      message:
+        "کاربر عزیز اکانت شما توسط پشتیبانی مایند تایید نشد لطفا با تیم پشتیبانی در ارتباط باشید .",
+      isAdminVerified: false,
+      email: user.email,
+    });
+  }
+  if (user.isAdminVerified === null) {
     return res.status(403).send({
       message:
         "در حال حاضر حساب کاربری شما در صف بررسی قرار دارد. کارشناسان ما به زودی حساب شما را بررسی خواهند کرد و به محض تکمیل فرآیند تأیید، از طریق ایمیل به شما اطلاع خواهیم داد.",
