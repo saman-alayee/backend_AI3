@@ -30,8 +30,8 @@ async function sendNotification(user) {
     });
     await user.save(); 
   } catch (error) {
-    console.error("Error sending OTP:", error);
-    throw new Error("Failed to send OTP. Please try again.");
+    console.error("Error sending sendNotification:", error);
+    throw new Error("Failed to send sendNotification. Please try again.");
   }
 }
 

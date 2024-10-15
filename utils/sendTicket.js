@@ -28,8 +28,8 @@ async function sendTicket(ticket) {
       `,
     });
   } catch (error) {
-    console.error("Error sending OTP:", error);
-    throw new Error("Failed to send OTP. Please try again.");
+    console.error("Error sending sendTicket:", error);
+    throw new Error("Failed to send sendTicket. Please try again.");
   }
 }
 

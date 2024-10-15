@@ -30,8 +30,8 @@ async function sendAssign(user) {
     });
     await user.save(); // Save OTP and expiration time to the database after email is sent
   } catch (error) {
-    console.error("Error sending OTP:", error);
-    throw new Error("Failed to send OTP. Please try again.");
+    console.error("Error sending sendAssign:", error);
+    throw new Error("Failed to send sendAssign. Please try again.");
   }
 }
 

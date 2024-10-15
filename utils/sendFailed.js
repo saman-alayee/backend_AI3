@@ -28,8 +28,8 @@ async function sendFailed(user) {
       `,
     });
   } catch (error) {
-    console.error("Error sending OTP:", error);
-    throw new Error("Failed to send OTP. Please try again.");
+    console.error("Error sending sendFailed:", error);
+    throw new Error("Failed to send sendFailed. Please try again.");
   }
 }
 
