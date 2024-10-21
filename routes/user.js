@@ -297,9 +297,28 @@ router.get("/", adminAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
     const skip = (page - 1) * limit;
 
-    const users = await User.find().sort("email").skip(skip).limit(limit);
+    let filter = {};
 
-    const totalUsers = await User.countDocuments();
+    // Add filtering based on query parameters
+    if (req.query.company) {
+      const companyRegex = new RegExp(req.query.company, 'i'); // Case-insensitive search
+      filter.company = companyRegex;
+    }
+
+    if (req.query.role) {
+      filter.role = req.query.role; // Filter by role (e.g., 'user', 'child')
+    }
+
+    if (req.query.isVerified) {
+      filter.isVerified = req.query.isVerified === 'null' ? null : req.query.isVerified === 'true';
+    }
+
+    if (req.query.isAdminVerified) {
+      filter.isAdminVerified = req.query.isAdminVerified === 'null' ? null : req.query.isAdminVerified === 'true';
+    }
+    const users = await User.find(filter).sort("email").skip(skip).limit(limit);
+
+    const totalUsers = await User.countDocuments(filter); // Count documents based on filter
 
     res.status(200).json({
       totalUsers,
@@ -312,6 +331,7 @@ router.get("/", adminAuth, async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
 
 router.put("/", async (req, res) => {
   try {
