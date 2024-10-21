@@ -36,7 +36,7 @@ router.post('/:ticketId', upload.array('images'), async (req, res) => {
       if (role === 'admin' || role === 'superadmin') {
         newStatus = "در انتظار پاسخ";
         await sendNotification(ticket);  // Notify admin role
-      } else if (role === 'user') {
+      } else if (role === 'user' || role === 'child') {
         newStatus = "در حال بررسی";
       } else {
         return res.status(400).json({ message: 'Invalid user role.' });
