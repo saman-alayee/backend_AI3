@@ -291,7 +291,7 @@ router.post("/otp", async (req, res) => {
 });
 
 
-router.get("/", superAdmin, async (req, res) => {
+router.get("/", adminAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1; // Default to page 1
     const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
