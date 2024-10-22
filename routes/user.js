@@ -300,9 +300,17 @@ router.get("/", adminAuth, async (req, res) => {
     let filter = {};
 
     // Add filtering based on query parameters
-    if (req.query.company) {
-      const companyRegex = new RegExp(req.query.company, 'i'); // Case-insensitive search
+    if (req.query.search) {
+      const companyRegex = new RegExp(req.query.search, 'i'); // Case-insensitive search
       filter.company = companyRegex;
+    }
+
+    if (req.query.date) {
+      const date = new Date(req.query.date);
+      if (isNaN(date.getTime())) return res.status(400).send("Invalid date format. Use ISO 8601 format.");
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+      filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
     }
 
     if (req.query.role) {
