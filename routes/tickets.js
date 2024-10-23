@@ -135,24 +135,45 @@ router.get("/users", auth, async (req, res) => {
 
 
 // single ticket of user 
-router.get('/users/:id',auth,async (req,res) => {
+router.get("/users/:id", auth, async (req, res) => {
   try {
     const userId = req.userId;
     const ticketId = req.params.id;
 
-    const ticket = await Ticket.findOne({_id:ticketId,createdBy:userId});
+    // Find the authenticated user
+    const user = await User.findById(userId);
 
-    if(!ticket) {
-      return res.status(404).send("Ticket not found ");
+    if (!user) return res.status(404).send("User not found.");
+
+    // Initialize filter object
+    let filter = { _id: ticketId };
+
+    if (user.role === "user") {
+      // If user is a mother, she can access her own tickets and her children's tickets
+      const childrenIds = user.children.map((child) => child._id);
+      filter.createdBy = { $in: [userId, ...childrenIds] };  // User or her children
+    } else if (user.role === "child") {
+      // If user is a child, they can only access their own tickets
+      filter.createdBy = userId;  // Child can only see their own tickets
+    } else {
+      return res.status(403).send("Access denied.");
+    }
+
+    // Find the ticket based on the filter
+    const ticket = await Ticket.findOne(filter);
+
+    if (!ticket) {
+      return res.status(404).send("Ticket not found or access denied.");
     }
 
     res.status(200).json(ticket);
-  }
-  catch (error) {
+
+  } catch (error) {
     console.error("Error retrieving ticket:", error);
     res.status(500).send("An error occurred while retrieving the ticket.");
   }
-})
+});
+
 // admins assign tickets 
 router.get("/myTickets", adminAuth, async (req, res) => {
   try {
