@@ -37,6 +37,31 @@ router.post('/', superAdmin, async (req, res) => {
 });
 
 
+// Password update endpoint
+router.put('/:id/password', async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.params.id);
+    if (!admin) return res.status(404).send('Admin not found.');
+
+    // Validate the new password (you may want to use a validation library)
+    if (!req.body.password || req.body.password.length < 6) {
+      return res.status(400).send('Password must be at least 6 characters long.');
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    admin.password = await bcrypt.hash(req.body.password, salt);
+
+    await admin.save();
+    res.send('Password updated successfully.');
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
+
 router.get('/', superAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1; 
