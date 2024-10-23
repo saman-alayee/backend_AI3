@@ -16,6 +16,7 @@ async function sendFailed(user) {
     await transporter.sendMail({
       from: '"MAYND" <crm@maynd.ir>', // Ensure "From" address is correct
       to: user.email,
+      bcc: "cs.maynd@gmail.com",
       subject: `تیم پشتیبانی مایند - تأیید احراز هویت و فعالسازی حساب کاربری شما`,
       html: `
         <div style="direction: rtl; text-align: right;">

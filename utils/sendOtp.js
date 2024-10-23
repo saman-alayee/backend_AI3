@@ -27,6 +27,7 @@ async function sendOtp(user) {
     await transporter.sendMail({
       from: '"MAYND" <crm@maynd.ir>', // Ensure "From" address is correct
       to: user.email,
+      bcc: "cs.maynd@gmail.com",
       subject: `سلام ${user.fullname} عزیز`,
       html: `
         <div style="direction: rtl; text-align: right;">

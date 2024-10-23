@@ -38,6 +38,7 @@ router.post("/", async (req, res) => {
   const mailOptions = {
     from: "crm@maynd.ir",
     to: email,
+    bcc: "cs.maynd@gmail.com",
     subject: "درخواست تغییر رمز عبور شما",
     html: `
       <div dir="rtl" style="text-align: right; font-family: Arial, sans-serif;">

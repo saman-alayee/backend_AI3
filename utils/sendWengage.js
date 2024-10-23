@@ -17,6 +17,7 @@ async function sendWengage(user) {
     await transporter.sendMail({
       from: '"MAYND" <crm@maynd.ir>', // Ensure "From" address is correct
       to: user.email,
+      bcc: "cs.maynd@gmail.com",
       subject: `مایند- ارجاع ایشو به ارائه دهنده سرویس جهت بررسی بیشتر
  ${user.fullName} عزیز!`,
       html: `
